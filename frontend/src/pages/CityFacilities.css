@@ -1,0 +1,156 @@
+/* ─── City Facilities Page ─────────────────────────────────── */
+.facilities-page {
+  min-height: 100vh;
+  background: var(--paper);
+  padding-bottom: 64px;
+}
+
+.facilities-hero {
+  background: linear-gradient(135deg, #FF9933 0%, #E8791A 100%);
+  padding: 44px 0 40px;
+}
+
+.facilities-breadcrumbs {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.82rem;
+  color: #3D1A00;
+  margin-bottom: 12px;
+}
+
+.facilities-breadcrumbs a {
+  color: #1F1200;
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.facilities-breadcrumbs a:hover {
+  text-decoration: underline;
+}
+
+.facilities-tag {
+  display: inline-block;
+  background: rgba(255, 255, 255, 0.25);
+  color: #1F1200;
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  padding: 4px 12px;
+  border-radius: 999px;
+  margin-bottom: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.5);
+}
+
+.facilities-hero h1 {
+  font-size: clamp(1.8rem, 3.5vw, 2.6rem);
+  color: #1F1200;
+  margin: 0 0 10px;
+}
+
+.facilities-subtitle {
+  color: #3D1A00;
+  font-size: 1rem;
+  max-width: 62ch;
+  margin: 0;
+  line-height: 1.6;
+}
+
+.facilities-container {
+  margin-top: -20px;
+}
+
+.facilities-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+  gap: 22px;
+}
+
+.facility-card {
+  background: #FFFFFF;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-md);
+  border-top: 3px solid var(--saffron);
+  padding: 24px 22px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+  transition: transform 150ms ease, box-shadow 150ms ease;
+  margin: 20px;
+}
+
+.facility-card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.08);
+}
+
+.facility-card-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 6px;
+}
+
+.facility-icon-box {
+  width: 44px;
+  height: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #FFF3E0;
+  border-radius: 10px;
+  color: #E8791A;
+  border: 1px solid #FFE0B2;
+}
+
+.facility-icon-box svg {
+  width: 22px;
+  height: 22px;
+}
+
+.facility-count-badge {
+  font-family: var(--font-display);
+  font-size: 1.6rem;
+  font-weight: 800;
+  color: var(--saffron-deep);
+  line-height: 1;
+}
+
+.facility-card-title {
+  font-size: 1.15rem;
+  font-weight: 700;
+  color: var(--ink);
+  margin: 0;
+}
+
+.facility-card-desc {
+  font-size: 0.88rem;
+  color: var(--ink-soft);
+  margin: 0;
+  line-height: 1.5;
+}
+
+.facility-card-spots {
+  margin-top: 10px;
+  padding-top: 12px;
+  border-top: 1px solid var(--line);
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.facility-card-spots strong {
+  font-size: 0.78rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--navy);
+}
+
+.facility-card-spots p {
+  font-size: 0.82rem;
+  color: var(--ink-muted);
+  margin: 0;
+  line-height: 1.45;
+}

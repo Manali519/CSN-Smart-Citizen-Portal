@@ -1,0 +1,166 @@
+/* ─── Officer Login Page (Dark Navy Municipal Theme) ────────── */
+.officer-login-page {
+  min-height: calc(100vh - var(--nav-height) - 100px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 48px 20px;
+  background: radial-gradient(circle at 50% 20%, #152A4A 0%, #0A1628 100%);
+}
+
+.officer-card {
+  width: 100%;
+  max-width: 460px;
+  background: #FFFFFF;
+  border-radius: var(--radius-lg, 12px);
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.35);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-top: 4px solid #1E5088;
+  padding: 36px 32px;
+}
+
+.officer-card-header {
+  text-align: center;
+  margin-bottom: 24px;
+}
+
+.officer-badge-icon {
+  font-size: 2.2rem;
+  line-height: 1;
+  margin-bottom: 8px;
+}
+
+.officer-badge-tag {
+  display: inline-block;
+  background: #E8EEF5;
+  color: #102A45;
+  font-size: 0.72rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  padding: 3px 10px;
+  border-radius: 999px;
+  margin-bottom: 10px;
+  border: 1px solid #C7D8EB;
+}
+
+.officer-card-header h1 {
+  font-size: 1.5rem;
+  color: #0A1628;
+  margin: 0 0 8px;
+  font-weight: 800;
+}
+
+.officer-card-header p {
+  font-size: 0.86rem;
+  color: #556B82;
+  margin: 0;
+  line-height: 1.45;
+}
+
+.officer-alert--error {
+  background: #FEECEB;
+  color: #9C1414;
+  border: 1px solid #F5C6CB;
+  border-radius: 6px;
+  padding: 10px 14px;
+  font-size: 0.85rem;
+  margin-bottom: 18px;
+  text-align: center;
+}
+
+.officer-form {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.officer-field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.officer-field label {
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: #1A2E46;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+.officer-field input,
+.officer-field select {
+  width: 100%;
+  padding: 11px 14px;
+  font-size: 0.92rem;
+  border: 1.5px solid #D0DBE5;
+  border-radius: 6px;
+  background: #F8FAFC;
+  color: #0A1628;
+  outline: none;
+  transition: border-color 0.15s ease, background 0.15s ease;
+  font-family: inherit;
+}
+
+.officer-field input:focus,
+.officer-field select:focus {
+  border-color: #1E5088;
+  background: #FFFFFF;
+  box-shadow: 0 0 0 3px rgba(30, 80, 136, 0.12);
+}
+
+.officer-btn {
+  margin-top: 8px;
+  padding: 13px 20px;
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: #FFFFFF;
+  background: linear-gradient(135deg, #1E5088 0%, #102A45 100%);
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+  letter-spacing: 0.02em;
+}
+
+.officer-btn:hover:not(:disabled) {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 14px rgba(16, 42, 69, 0.3);
+}
+
+.officer-btn:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+}
+
+.officer-card-footer {
+  margin-top: 24px;
+  padding-top: 18px;
+  border-top: 1px solid #E8EEF5;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.officer-card-footer p {
+  font-size: 0.85rem;
+  color: #556B82;
+  margin: 0;
+}
+
+.officer-link {
+  color: #1E5088;
+  font-weight: 700;
+  text-decoration: none;
+}
+
+.officer-link:hover {
+  text-decoration: underline;
+}
+
+.officer-help-text {
+  font-size: 0.76rem !important;
+  color: #8295A8 !important;
+}

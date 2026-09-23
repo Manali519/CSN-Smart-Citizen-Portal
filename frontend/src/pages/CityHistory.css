@@ -1,0 +1,443 @@
+/* ─── City History & Heritage Page ─────────────────────────── */
+.history-page {
+  min-height: 100vh;
+  background: var(--paper);
+  padding-bottom: 72px;
+}
+
+.history-hero {
+  background: linear-gradient(135deg, #FF9933 0%, #E8791A 100%);
+  padding: 48px 0 44px;
+  margin-bottom: 20px;
+}
+
+.history-breadcrumbs {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.82rem;
+  color: #3D1A00;
+  margin-bottom: 12px;
+}
+
+.history-breadcrumbs a {
+  color: #1F1200;
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.history-breadcrumbs a:hover {
+  text-decoration: underline;
+}
+
+.history-tag {
+  display: inline-block;
+  background: rgba(255, 255, 255, 0.25);
+  color: #1F1200;
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  padding: 4px 12px;
+  border-radius: 999px;
+  margin-bottom: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.5);
+}
+
+.history-hero h1 {
+  font-size: clamp(1.8rem, 3.5vw, 2.8rem);
+  color: #1F1200;
+  margin: 0 0 10px;
+}
+
+.history-subtitle {
+  color: #3D1A00;
+  font-size: 1.02rem;
+  max-width: 65ch;
+  margin: 0;
+  line-height: 1.6;
+}
+
+.history-container {
+  margin-top: -24px;
+  display: flex;
+  flex-direction: column;
+  gap: 32px;
+}
+
+.history-section {
+  width: 100%;
+}
+
+.history-section-header {
+  margin-bottom: 22px;
+}
+
+.hsec-pill {
+  display: inline-block;
+  background: #FFF3E0;
+  color: #E8791A;
+  font-size: 0.74rem;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  padding: 3px 10px;
+  border-radius: 999px;
+  margin-bottom: 8px;
+  border: 1px solid #FFD9A0;
+}
+
+.history-section-header h2 {
+  font-size: 1.35rem;
+  color: var(--ink);
+  margin: 0 0 6px;
+}
+
+.history-section-header p {
+  color: var(--ink-soft);
+  font-size: 0.9rem;
+  margin: 0;
+}
+
+/* ─── Fast Fact Cards ───────────────────────────────────────── */
+.history-facts-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 18px;
+}
+
+.history-fact-card {
+  background: #FFFFFF;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-md);
+  border-top: 3px solid var(--saffron);
+  padding: 22px 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+  transition: transform 150ms ease, box-shadow 150ms ease;
+}
+
+.history-fact-card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.08);
+}
+
+.hfact-icon {
+  font-size: 1.8rem;
+  line-height: 1;
+  margin-bottom: 4px;
+}
+
+.hfact-label {
+  font-size: 0.74rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  color: var(--saffron-deep);
+  letter-spacing: 0.04em;
+}
+
+.history-fact-card strong {
+  font-size: 1.05rem;
+  color: var(--ink);
+}
+
+.history-fact-card p {
+  font-size: 0.85rem;
+  color: var(--ink-soft);
+  margin: 0;
+  line-height: 1.45;
+}
+
+/* ─── Timeline Box ─────────────────────────────────────────── */
+.history-box {
+  background: #FFFFFF;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-md);
+  border-top: 3px solid var(--saffron);
+  padding: 32px;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.04);
+}
+
+.history-timeline {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  position: relative;
+  margin-top: 8px;
+}
+
+.ht-item {
+  display: grid;
+  grid-template-columns: 130px 1fr;
+  gap: 20px;
+  align-items: flex-start;
+  padding: 12px 14px;
+  border-radius: 8px;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  transition: background 0.15s ease;
+}
+
+.ht-item:hover {
+  background: #FFF9F3;
+  border-color: #FFE0B2;
+}
+
+.ht-year-badge {
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: 0.92rem;
+  color: #1F1200;
+  background: #FFF3E0;
+  padding: 6px 10px;
+  border-radius: 6px;
+  border: 1px solid #FFE0B2;
+  text-align: center;
+  white-space: nowrap;
+}
+
+.ht-body {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.ht-title {
+  font-size: 1.02rem;
+  color: var(--ink);
+  margin: 0;
+  font-weight: 700;
+}
+
+.ht-desc {
+  font-size: 0.88rem;
+  color: var(--ink-soft);
+  margin: 0;
+  line-height: 1.5;
+}
+
+/* ─── Heritage Sites Grid ──────────────────────────────────── */
+.heritage-cards-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+  gap: 24px;
+}
+
+.heritage-card {
+  background: #FFFFFF;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-md);
+  overflow: hidden;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.05);
+  display: flex;
+  flex-direction: column;
+  transition: transform 180ms ease, box-shadow 180ms ease;
+}
+
+.heritage-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 12px 28px rgba(0, 0, 0, 0.1);
+}
+
+.heritage-card-img-wrap {
+  position: relative;
+  width: 100%;
+  height: 220px;
+  overflow: hidden;
+  background: #000;
+}
+
+.heritage-card-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 300ms ease;
+}
+
+.heritage-card:hover .heritage-card-img {
+  transform: scale(1.04);
+}
+
+.heritage-status-badge {
+  position: absolute;
+  top: 12px;
+  left: 12px;
+  font-size: 0.72rem;
+  font-weight: 700;
+  padding: 4px 10px;
+  border-radius: 999px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+}
+
+.status--unesco {
+  background: #0077D7;
+  color: #FFFFFF;
+  border: 1px solid rgba(255, 255, 255, 0.4);
+}
+
+.status--asi {
+  background: #D97706;
+  color: #FFFFFF;
+}
+
+.status--fort {
+  background: #15803D;
+  color: #FFFFFF;
+}
+
+.status--gate {
+  background: #7C3AED;
+  color: #FFFFFF;
+}
+
+.heritage-card-content {
+  padding: 22px 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  flex: 1;
+}
+
+.heritage-card-title {
+  font-size: 1.15rem;
+  font-weight: 700;
+  color: var(--ink);
+  margin: 0;
+}
+
+.heritage-card-desc {
+  font-size: 0.88rem;
+  color: var(--ink-soft);
+  margin: 0;
+  line-height: 1.55;
+  flex: 1;
+}
+
+.heritage-card-footer {
+  margin-top: 10px;
+  padding-top: 10px;
+  border-top: 1px solid var(--line);
+  font-size: 0.8rem;
+  color: var(--ink-muted);
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.heritage-card-footer strong {
+  color: var(--navy);
+  text-transform: uppercase;
+  font-size: 0.72rem;
+  letter-spacing: 0.04em;
+}
+
+/* ─── Industrial Hub (AURIC) ───────────────────────────────── */
+.industrial-box {
+  background: linear-gradient(180deg, #FFFFFF 0%, #F4F8FC 100%);
+  border-top: 3px solid #0077D7;
+}
+
+.industrial-pill {
+  background: #E3F2FD;
+  color: #0077D7;
+  border-color: #BBDEFB;
+}
+
+.industrial-layout {
+  display: grid;
+  grid-template-columns: 1.1fr 1fr;
+  gap: 32px;
+  align-items: center;
+}
+
+.industrial-text h2 {
+  font-size: 1.35rem;
+  color: var(--ink);
+  margin: 0 0 12px;
+}
+
+.industrial-text p {
+  font-size: 0.9rem;
+  color: var(--ink-soft);
+  line-height: 1.6;
+  margin-bottom: 16px;
+}
+
+.industrial-points {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.industrial-points li {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  font-size: 0.88rem;
+  color: var(--ink);
+  line-height: 1.45;
+}
+
+.ind-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: #0077D7;
+  margin-top: 6px;
+  flex-shrink: 0;
+}
+
+.industrial-image-wrap {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.industrial-img {
+  width: 100%;
+  height: 280px;
+  object-fit: cover;
+  border-radius: 10px;
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.08);
+  border: 1px solid var(--line);
+}
+
+.industrial-caption {
+  font-size: 0.78rem;
+  color: var(--ink-muted);
+  text-align: center;
+  font-style: italic;
+}
+
+/* ─── Map Container ────────────────────────────────────────── */
+.history-map-container {
+  width: 100%;
+  border-radius: 8px;
+  overflow: hidden;
+  border: 1px solid var(--line);
+}
+
+/* ─── Responsive ───────────────────────────────────────────── */
+@media (max-width: 860px) {
+  .industrial-layout {
+    grid-template-columns: 1fr;
+  }
+
+  .ht-item {
+    grid-template-columns: 1fr;
+    gap: 8px;
+  }
+}
+
+@media (max-width: 600px) {
+  .history-box {
+    padding: 20px 16px;
+  }
+}

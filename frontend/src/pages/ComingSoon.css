@@ -1,0 +1,21 @@
+.coming-soon {
+  min-height: 50vh;
+  display: flex;
+  align-items: center;
+}
+
+.coming-soon-inner {
+  max-width: 520px;
+  text-align: left;
+}
+
+.coming-soon-tag {
+  display: inline-block;
+  background: var(--amber-bg);
+  color: var(--amber);
+  font-size: 0.78rem;
+  font-weight: 600;
+  padding: 5px 12px;
+  border-radius: 999px;
+  margin-bottom: 16px;
+}

@@ -1,0 +1,111 @@
+/* ─── How It Works (matches Know Your City cards) ──────────────── */
+.how {
+  background: var(--paper);
+  border-top: 1px solid var(--line);
+  padding: 64px 0;
+}
+
+.how-tag {
+  display: inline-block;
+  background: #FFF3E0;
+  color: #E8791A;
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  padding: 4px 12px;
+  border-radius: 999px;
+  margin-bottom: 12px;
+  border: 1px solid #FFD9A0;
+}
+
+.how .section-heading h2 {
+  font-size: clamp(1.6rem, 2.5vw, 2.2rem);
+  color: var(--ink);
+  margin-bottom: 8px;
+}
+
+.how .section-heading p {
+  color: var(--ink-soft);
+  font-size: 0.98rem;
+  max-width: 60ch;
+  margin: 0;
+}
+
+.how-steps {
+  list-style: none;
+  margin: 36px 0 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 20px;
+}
+
+/* Card matching .kyc-facility-card */
+.how-step {
+  background: var(--white);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-md);
+  border-top: 3px solid var(--saffron);
+  padding: 24px 20px;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 8px;
+  transition: transform 150ms ease, box-shadow 150ms ease;
+  position: relative;
+}
+
+.how-step:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.08);
+}
+
+.how-step-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  margin-bottom: 6px;
+}
+
+.how-number {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 38px;
+  height: 38px;
+  border-radius: 10px;
+  background: #FFF3E0;
+  color: #E8791A;
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: 1.15rem;
+  border: 1px solid #FFE0B2;
+}
+
+.how-step-badge {
+  font-size: 0.72rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--navy);
+  background: var(--surface);
+  padding: 3px 8px;
+  border-radius: 6px;
+  border: 1px solid var(--line);
+}
+
+.how-step h3 {
+  font-size: 1.05rem;
+  font-weight: 700;
+  margin: 0;
+  color: var(--ink);
+}
+
+.how-step p {
+  font-size: 0.88rem;
+  color: var(--ink-soft);
+  line-height: 1.55;
+  margin: 0;
+}

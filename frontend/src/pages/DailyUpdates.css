@@ -1,0 +1,249 @@
+/* ─── Daily Updates Page ────────────────────────────────────── */
+.updates-page {
+  min-height: 100vh;
+  background: var(--paper);
+  padding-bottom: 64px;
+}
+
+.updates-hero {
+  background: linear-gradient(135deg, #FF9933 0%, #E8791A 100%);
+  padding: 48px 0 44px;
+}
+
+.updates-badge {
+  display: inline-block;
+  background: rgba(255, 255, 255, 0.25);
+  color: #1F1200;
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  padding: 4px 12px;
+  border-radius: 999px;
+  margin-bottom: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.5);
+}
+
+.updates-hero h1 {
+  font-size: clamp(1.8rem, 3.5vw, 2.6rem);
+  color: #1F1200;
+  margin: 0 0 10px;
+}
+
+.updates-date {
+  color: #3D1A00;
+  font-size: 1rem;
+  margin: 0;
+}
+
+.updates-container {
+  margin-top: -24px;
+}
+
+/* Tabs */
+.updates-tabs {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin-bottom: 24px;
+}
+
+.updates-tab {
+  background: #FFFFFF;
+  border: 1.5px solid var(--line);
+  padding: 12px 20px;
+  border-radius: var(--radius-md);
+  font-size: 0.92rem;
+  font-weight: 600;
+  color: var(--ink);
+  cursor: pointer;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.04);
+  transition: all 0.15s ease;
+}
+
+.updates-tab:hover {
+  border-color: var(--saffron);
+  background: #FFF9F3;
+}
+
+.updates-tab.active {
+  background: var(--saffron);
+  border-color: var(--saffron-deep);
+  color: #1F1200;
+  font-weight: 700;
+}
+
+/* Section block */
+.updates-section {
+  background: #FFFFFF;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-md);
+  border-top: 3px solid var(--saffron);
+  padding: 32px;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.04);
+}
+
+.updates-section-header {
+  margin-bottom: 24px;
+}
+
+.updates-section-header h2 {
+  font-size: 1.35rem;
+  color: var(--ink);
+  margin: 0 0 6px;
+}
+
+.updates-section-header p {
+  color: var(--ink-soft);
+  font-size: 0.9rem;
+  margin: 0;
+}
+
+/* Table */
+.updates-table-wrapper {
+  overflow-x: auto;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+}
+
+.updates-table {
+  width: 100%;
+  border-collapse: collapse;
+  text-align: left;
+  font-size: 0.9rem;
+}
+
+.updates-table th {
+  background: var(--surface);
+  color: var(--ink);
+  font-weight: 700;
+  padding: 12px 16px;
+  border-bottom: 2px solid var(--line);
+  white-space: nowrap;
+}
+
+.updates-table td {
+  padding: 12px 16px;
+  border-bottom: 1px solid var(--line);
+  color: var(--ink-soft);
+}
+
+.updates-time-cell {
+  font-family: var(--font-display);
+  font-weight: 600;
+  color: var(--navy) !important;
+}
+
+/* Status tags */
+.updates-status-tag {
+  display: inline-block;
+  padding: 3px 8px;
+  border-radius: 4px;
+  font-size: 0.78rem;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.tag--ok {
+  background: #E8F5E9;
+  color: #2E7D32;
+}
+
+.tag--warn {
+  background: #FFF3E0;
+  color: #E65100;
+}
+
+.tag--progress {
+  background: #E3F2FD;
+  color: #1565C0;
+}
+
+.updates-note-card {
+  margin-top: 20px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: #FFF8E1;
+  border: 1px solid #FFE082;
+  border-radius: 8px;
+  padding: 12px 16px;
+  font-size: 0.88rem;
+  color: #5D4037;
+}
+
+.updates-note-card span {
+  font-size: 1.3rem;
+}
+
+.updates-note-card p {
+  margin: 0;
+}
+
+/* Cards grid matching Know Your City */
+.updates-cards-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 18px;
+}
+
+.updates-card {
+  background: #FFFFFF;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-md);
+  border-top: 3px solid var(--saffron);
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+  transition: transform 150ms ease, box-shadow 150ms ease;
+}
+
+.updates-card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.08);
+}
+
+.updates-card-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+}
+
+.updates-card-ward {
+  font-size: 0.78rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  color: var(--saffron-deep);
+}
+
+.updates-card-title {
+  font-size: 1.02rem;
+  font-weight: 700;
+  color: var(--ink);
+  margin: 0;
+  line-height: 1.35;
+}
+
+.updates-card-detail {
+  font-size: 0.86rem;
+  color: var(--ink-soft);
+  line-height: 1.45;
+}
+
+.updates-card-footer {
+  margin-top: auto;
+  padding-top: 8px;
+  border-top: 1px solid var(--line);
+  font-size: 0.82rem;
+  color: var(--ink-muted);
+  font-weight: 600;
+}
+
+@media (max-width: 600px) {
+  .updates-section {
+    padding: 20px 16px;
+  }
+}

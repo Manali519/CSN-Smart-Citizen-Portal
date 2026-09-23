@@ -1,0 +1,33 @@
+.footer {
+  border-top: 1px solid var(--line);
+}
+
+.footer-band {
+  height: 4px;
+  background: linear-gradient(90deg, var(--saffron) 0%, var(--white) 50%, var(--green) 100%);
+}
+
+.footer-inner {
+  padding: 22px 24px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.footer-inner p {
+  margin: 0;
+  font-size: 0.85rem;
+  color: var(--ink-soft);
+}
+
+.footer-inner nav {
+  display: flex;
+  gap: 18px;
+}
+
+.footer-inner nav a {
+  font-size: 0.85rem;
+  color: var(--ink-soft);
+}
