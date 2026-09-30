@@ -19,8 +19,16 @@ const transporter = nodemailer.createTransport({
  * .env fails fast and loudly instead of silently dropping OTP emails.
  */
 export async function verifyMailer() {
-  await transporter.verify();
-  console.log('[mailer] SMTP connection verified');
+  try {
+    const verifyPromise = transporter.verify();
+    const timeoutPromise = new Promise((_, reject) =>
+      setTimeout(() => reject(new Error('SMTP verify timed out')), 3500)
+    );
+    await Promise.race([verifyPromise, timeoutPromise]);
+    console.log('[mailer] SMTP connection verified');
+  } catch (err) {
+    console.warn(`[mailer] SMTP notice: ${err.message}. Server will continue running.`);
+  }
 }
 
 /**

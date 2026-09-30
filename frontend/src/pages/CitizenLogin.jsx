@@ -1,6 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useGoogleSignIn } from '../hooks/useGoogleSignIn.js';
+import { useAuth } from '../context/AuthContext.jsx';
 import {
   loginWithPassword,
   loginWithGoogle,
@@ -13,6 +14,7 @@ const RESEND_COOLDOWN_SECONDS = 60;
 
 export default function CitizenLogin() {
   const navigate = useNavigate();
+  const { refreshUser } = useAuth();
 
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -58,6 +60,7 @@ export default function CitizenLogin() {
     setLoading(true);
     try {
       await loginWithPassword({ email, password });
+      await refreshUser();
       navigate('/dashboard');
     } catch (err) {
       if (err.code === 'NOT_REGISTERED') {
@@ -81,6 +84,7 @@ export default function CitizenLogin() {
     setLoading(true);
     try {
       await loginWithGoogle({ googleIdToken: credential });
+      await refreshUser();
       navigate('/dashboard');
     } catch (err) {
       if (err.code === 'NOT_REGISTERED') {
@@ -104,6 +108,7 @@ export default function CitizenLogin() {
     setLoading(true);
     try {
       await verifyRegistrationOtp({ email: otpEmail, otp });
+      await refreshUser();
       navigate('/dashboard');
     } catch (err) {
       setOtpError(err.message);

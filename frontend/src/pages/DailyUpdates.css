@@ -59,6 +59,7 @@
   cursor: pointer;
   box-shadow: 0 2px 6px rgba(0, 0, 0, 0.04);
   transition: all 0.15s ease;
+  margin: 10px;
 }
 
 .updates-tab:hover {
@@ -71,6 +72,7 @@
   border-color: var(--saffron-deep);
   color: #1F1200;
   font-weight: 700;
+  margin: 10px;
 }
 
 /* Section block */

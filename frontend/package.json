@@ -8,7 +8,6 @@
     "dev": "vite --host 0.0.0.0 --port 3000",
     "build": "vite build",
     "preview": "vite preview --host 0.0.0.0 --port 3000"
-
   },
   "keywords": [],
   "author": "",
@@ -19,6 +18,8 @@
     "vite": "^8.3.0"
   },
   "dependencies": {
+    "canvas-confetti": "^1.9.4",
+    "leaflet": "^1.9.4",
     "react": "^19.3.0",
     "react-dom": "^19.3.0",
     "react-router-dom": "^7.18.4"

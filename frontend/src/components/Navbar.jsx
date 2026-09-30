@@ -1,10 +1,13 @@
 import React, { useEffect, useState } from 'react';
 import { NavLink, useNavigate } from 'react-router-dom';
+import { useAuth } from '../context/AuthContext.jsx';
 import logo from './logo.png';
 import './Navbar.css';
 
 export default function Navbar() {
   const [open, setOpen] = useState(false);
+  const [servicesOpen, setServicesOpen] = useState(false);
+  const { user, isLoggedIn, logout } = useAuth();
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -15,7 +18,10 @@ export default function Navbar() {
     return () => window.removeEventListener('resize', handleResize);
   }, []);
 
-  function close() { setOpen(false); }
+  function close() {
+    setOpen(false);
+    setServicesOpen(false);
+  }
 
   function goHome() {
     close();
@@ -35,6 +41,12 @@ export default function Navbar() {
         if (el2) el2.scrollIntoView({ behavior: 'smooth' });
       }, 200);
     }
+  }
+
+  async function handleLogout() {
+    close();
+    await logout();
+    navigate('/citizen-login');
   }
 
   return (
@@ -80,6 +92,7 @@ export default function Navbar() {
                 About Us
               </button>
             </li>
+
             <li className="nav-dropdown-item">
               <NavLink
                 to="/know-your-city"
@@ -100,15 +113,98 @@ export default function Navbar() {
                 </NavLink>
               </div>
             </li>
+
+            {/* When logged in: Register a complaint & Services button right beside it */}
+            {isLoggedIn ? (
+              <>
+                <li>
+                  <NavLink
+                    to="/register-complaint"
+                    onClick={close}
+                    className={({ isActive }) => `nav-complaint-btn ${isActive ? 'active' : ''}`}
+                  >
+                    📝 Register a Complaint
+                  </NavLink>
+                </li>
+                <li className="nav-dropdown-item nav-services-dropdown">
+                  <button
+                    type="button"
+                    className="nav-dropdown-btn nav-services-btn"
+                    onClick={() => setServicesOpen((v) => !v)}
+                  >
+                    ⚡ Services <span className="nav-dropdown-arrow">▾</span>
+                  </button>
+                  <div className={`nav-dropdown-content ${servicesOpen ? 'force-open' : ''}`}>
+                    <NavLink to="/services/water-tanker" onClick={close} className="nav-dropdown-link nav-service-item">
+                      <span className="service-nav-icon">💧</span>
+                      <div>
+                        <strong>Water Tanker</strong>
+                        <small>Zomato-style booking with live GPS</small>
+                      </div>
+                    </NavLink>
+                    <NavLink to="/services/garbage-van" onClick={close} className="nav-dropdown-link nav-service-item">
+                      <span className="service-nav-icon">🚛</span>
+                      <div>
+                        <strong>Garbage Vans</strong>
+                        <small>Civic waste pickup &amp; tracking</small>
+                      </div>
+                    </NavLink>
+                  </div>
+                </li>
+              </>
+            ) : (
+              /* When not logged in, also provide quick access to Services */
+              <li className="nav-dropdown-item nav-services-dropdown">
+                <button
+                  type="button"
+                  className="nav-dropdown-btn nav-services-btn"
+                  onClick={() => setServicesOpen((v) => !v)}
+                >
+                  ⚡ Services <span className="nav-dropdown-arrow">▾</span>
+                </button>
+                <div className={`nav-dropdown-content ${servicesOpen ? 'force-open' : ''}`}>
+                  <NavLink to="/services/water-tanker" onClick={close} className="nav-dropdown-link nav-service-item">
+                    <span className="service-nav-icon">💧</span>
+                    <div>
+                      <strong>Water Tanker</strong>
+                      <small>Book 1000L - 20000L online</small>
+                    </div>
+                  </NavLink>
+                  <NavLink to="/services/garbage-van" onClick={close} className="nav-dropdown-link nav-service-item">
+                    <span className="service-nav-icon">🚛</span>
+                    <div>
+                      <strong>Garbage Vans</strong>
+                      <small>Schedule municipal waste pickup</small>
+                    </div>
+                  </NavLink>
+                </div>
+              </li>
+            )}
           </ul>
 
           <div className="nav-auth">
-            <NavLink to="/citizen-login" className="btn nav-btn-login" onClick={close}>
-              Citizen Login
-            </NavLink>
-            <NavLink to="/officer-login" className="btn nav-btn-officer" onClick={close}>
-              Officer Login
-            </NavLink>
+            {isLoggedIn ? (
+              <div className="nav-user-cluster">
+                <NavLink to="/dashboard" className="btn nav-btn-user" onClick={close}>
+                  <span className="user-avatar-circle">
+                    {(user?.firstName || 'C')[0].toUpperCase()}
+                  </span>
+                  <span>{user?.firstName ? `${user.firstName}` : 'Dashboard'}</span>
+                </NavLink>
+                <button type="button" className="btn nav-btn-logout" onClick={handleLogout}>
+                  Log Out
+                </button>
+              </div>
+            ) : (
+              <>
+                <NavLink to="/citizen-login" className="btn nav-btn-login" onClick={close}>
+                  Citizen Login
+                </NavLink>
+                <NavLink to="/officer-login" className="btn nav-btn-officer" onClick={close}>
+                  Officer Login
+                </NavLink>
+              </>
+            )}
           </div>
         </nav>
       </div>

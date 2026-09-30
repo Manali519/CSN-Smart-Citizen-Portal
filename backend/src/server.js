@@ -10,7 +10,9 @@ import "./models/Admin.js";
 import "./models/Department.js";
 import "./models/Complaint.js";
 import "./models/ServiceRequest.js";
-import "./models/Otp.js"
+import "./models/Otp.js";
+import "./models/TankerBooking.js";
+import "./models/GarbageBooking.js";
 async function main() {
   // 2. Establish connection to MongoDB
   await connectDB();

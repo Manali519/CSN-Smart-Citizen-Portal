@@ -5,7 +5,7 @@ import './OfficerLogin.css';
 export default function OfficerLogin() {
   const [officerId, setOfficerId] = useState('');
   const [password, setPassword] = useState('');
-  const [department, setDepartment] = useState('administration');
+  const [department, setDepartment] = useState('water');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
@@ -24,11 +24,40 @@ export default function OfficerLogin() {
     }
 
     setLoading(true);
-    // Simulated officer authentication
-    setTimeout(() => {
-      setLoading(false);
-      navigate('/dashboard');
-    }, 700);
+
+    const DEPT_MAP = {
+      water: 'Water Supply and Drainage Department',
+      sanitation: 'Sanitation Department',
+      administration: 'General Administration & Grievances',
+      roads: 'Roads, Bridges & Infrastructure',
+      electrical: 'Electrical & Street Lighting',
+      miscellaneous: 'Others',
+    };
+
+    const resolvedDept = DEPT_MAP[department] || department;
+
+    import('../services/officer/index.js')
+      .then(({ officerLoginApi }) =>
+        officerLoginApi({ officerId: officerId.trim(), password: password.trim(), department: resolvedDept })
+      )
+      .then((res) => {
+        if (!res?.success) {
+          throw new Error(res?.message || 'Authentication failed.');
+        }
+        // Securely store session with NO password
+        const session = {
+          officerId: res.officer?.officerId || officerId.trim(),
+          officerName: res.officer?.officerName || `${resolvedDept} Officer`,
+          department: res.officer?.department || resolvedDept,
+        };
+        localStorage.setItem('officer_session', JSON.stringify(session));
+        setLoading(false);
+        navigate('/officer/dashboard');
+      })
+      .catch((err) => {
+        setLoading(false);
+        setError(err.message || 'Authentication failed. Invalid Officer ID or password.');
+      });
   };
 
   return (
@@ -51,12 +80,12 @@ export default function OfficerLogin() {
               value={department}
               onChange={(e) => setDepartment(e.target.value)}
             >
-              <option value="administration">General Administration &amp; Grievances</option>
               <option value="water">Water Supply &amp; Drainage</option>
-              <option value="roads">Roads, Bridges &amp; Infrastructure</option>
               <option value="sanitation">Solid Waste &amp; Public Sanitation</option>
+              <option value="administration">General Administration &amp; Grievances</option>
+              <option value="roads">Roads, Bridges &amp; Infrastructure</option>
               <option value="electrical">Electrical &amp; Street Lighting</option>
-              <option value="health">Public Health &amp; Hospitals</option>
+              <option value="miscellaneous">Others </option>
             </select>
           </div>
 

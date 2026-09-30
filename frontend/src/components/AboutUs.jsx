@@ -11,7 +11,7 @@ const STATS = [
     ),
     value: '115+',
     label: 'Municipal Wards',
-    desc: 'Covering 5 zones across the city',
+    desc: 'Covering 10 zones across the city',
   },
   {
     icon: (
@@ -22,7 +22,7 @@ const STATS = [
         <path d="M16 3.13a4 4 0 0 1 0 7.75" />
       </svg>
     ),
-    value: '1.6M+',
+    value: 'City-Wide',
     label: 'Citizens Served',
     desc: 'Empowered through digital governance',
   },
@@ -48,7 +48,7 @@ const STATS = [
     ),
     value: '10+',
     label: 'City Services',
-    desc: 'Water, roads, sanitation, & more',
+    desc: 'Water, roads, sanitation, hospitals & more',
   },
 ];
 
@@ -82,7 +82,7 @@ export default function AboutUs() {
               </li>
               <li>
                 <span className="highlight-dot" />
-                Ward-level information for all 115+ wards
+                Zone level information for all 10 zones
               </li>
               <li>
                 <span className="highlight-dot" />

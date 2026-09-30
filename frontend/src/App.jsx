@@ -14,13 +14,33 @@ import CityHistory from './pages/CityHistory.jsx';
 import CityTransportation from './pages/CityTransportation.jsx';
 import CityFacilities from './pages/CityFacilities.jsx';
 import DailyUpdates from './pages/DailyUpdates.jsx';
+import WaterTankerBooking from './pages/WaterTankerBooking.jsx';
+import TankerLiveTracking from './pages/TankerLiveTracking.jsx';
+import GarbageVanBooking from './pages/GarbageVanBooking.jsx';
+import RegisterComplaint from './pages/RegisterComplaint.jsx';
+import OfficerDashboard from './pages/OfficerDashboard.jsx';
 import ComingSoon from './pages/ComingSoon.jsx';
 
-const PLACEHOLDER_ROUTES = [
-  { path: '/register-complaint', title: 'Register a Complaint' },
-  { path: '/track-complaint', title: 'Track Your Complaint' },
-  { path: '/water-request', title: 'Water Request' },
-  { path: '/live-heatmap', title: 'Live Heatmap' },
+const ROUTE_ALIASES = [
+  { path: '/officer-dashboard', element: <OfficerDashboard /> },
+  { path: '/officer/dashboard', element: <OfficerDashboard /> },
+  { path: '/dashboard', element: <Dashboard /> },
+  { path: '/register-complaint', element: <RegisterComplaint /> },
+  { path: '/complaints/register', element: <RegisterComplaint /> },
+  { path: '/services/water-tanker', element: <WaterTankerBooking /> },
+  { path: '/water-request', element: <WaterTankerBooking /> },
+  { path: '/services/tanker', element: <WaterTankerBooking /> },
+  { path: '/track-tanker/:bookingId', element: <TankerLiveTracking /> },
+  { path: '/services/garbage-van', element: <GarbageVanBooking /> },
+  { path: '/garbage-booking', element: <GarbageVanBooking /> },
+  { path: '/know-your-city', element: <KnowYourCity /> },
+  { path: '/city-history', element: <CityHistory /> },
+  { path: '/know-your-city/history', element: <CityHistory /> },
+  { path: '/city-transport', element: <CityTransportation /> },
+  { path: '/know-your-city/transportation', element: <CityTransportation /> },
+  { path: '/city-facilities', element: <CityFacilities /> },
+  { path: '/know-your-city/facilities', element: <CityFacilities /> },
+  { path: '/daily-updates', element: <DailyUpdates /> },
 ];
 
 export default function App() {
@@ -36,24 +56,11 @@ export default function App() {
           <Route path="/citizen-register" element={<CitizenRegister />} />
           <Route path="/citizen-login" element={<CitizenLogin />} />
           <Route path="/officer-login" element={<OfficerLogin />} />
-          <Route path="/dashboard" element={<Dashboard />} />
-          
-          {/* Know Your City & Subpages */}
-          <Route path="/know-your-city" element={<KnowYourCity />} />
-          <Route path="/city-history" element={<CityHistory />} />
-          <Route path="/know-your-city/history" element={<CityHistory />} />
-          <Route path="/city-transport" element={<CityTransportation />} />
-          <Route path="/know-your-city/transportation" element={<CityTransportation />} />
-          <Route path="/city-facilities" element={<CityFacilities />} />
-          <Route path="/know-your-city/facilities" element={<CityFacilities />} />
-  
 
-          {/* Daily Updates */}
-          <Route path="/daily-updates" element={<DailyUpdates />} />
-
-          {PLACEHOLDER_ROUTES.map((r) => (
-            <Route key={r.path} path={r.path} element={<ComingSoon title={r.title} />} />
+          {ROUTE_ALIASES.map((route) => (
+            <Route key={route.path} path={route.path} element={route.element} />
           ))}
+
           <Route path="*" element={<ComingSoon title="Page not found" />} />
         </Routes>
       </main>

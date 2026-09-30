@@ -582,3 +582,137 @@
     padding: 18px 16px;
   }
 }
+
+/* ── Mock Notification Alert for Citizen ── */
+.citizen-mock-notification-alert {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  background: #f0fdf4;
+  border: 1.5px solid #22c55e;
+  border-radius: 12px;
+  padding: 14px 18px;
+  margin-bottom: 24px;
+  box-shadow: 0 4px 14px rgba(34, 197, 94, 0.12);
+  animation: slideDownAlert 0.3s ease-out;
+}
+
+@keyframes slideDownAlert {
+  from {
+    opacity: 0;
+    transform: translateY(-8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.notif-alert-bell {
+  font-size: 1.8rem;
+  line-height: 1;
+}
+
+.notif-alert-content strong {
+  display: block;
+  font-size: 0.92rem;
+  color: #166534;
+}
+
+.notif-alert-content p {
+  margin: 2px 0 0 0;
+  font-size: 0.88rem;
+  font-weight: 600;
+  color: #15803d;
+}
+
+/* ── Citizen Service Requests & Bookings List ── */
+.citizen-requests-list {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  margin-top: 10px;
+}
+
+.citizen-request-item {
+  background: #ffffff;
+  border: 1px solid var(--line, #e2e8f0);
+  border-radius: 12px;
+  padding: 16px;
+  transition: all 0.2s ease;
+}
+
+.citizen-request-item:hover {
+  border-color: #cbd5e1;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+}
+
+.citizen-req-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 8px;
+  flex-wrap: wrap;
+}
+
+.citizen-req-ref {
+  font-family: monospace;
+  font-size: 0.88rem;
+  font-weight: 700;
+  color: #0284c7;
+}
+
+.citizen-req-meta {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 6px;
+  flex-wrap: wrap;
+}
+
+.citizen-req-meta strong {
+  font-size: 0.95rem;
+  color: #0f172a;
+}
+
+.citizen-req-dept {
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: #0369a1;
+  background: #e0f2fe;
+  padding: 2px 8px;
+  border-radius: 6px;
+}
+
+.citizen-req-address,
+.citizen-req-details,
+.citizen-req-notes {
+  margin: 4px 0;
+  font-size: 0.84rem;
+  color: #475569;
+}
+
+/* ── Workflow Status Pills ── */
+.status-accepted-shortly {
+  background: #e0f2fe !important;
+  color: #0369a1 !important;
+  border: 1px solid #7dd3fc !important;
+  font-weight: 700 !important;
+}
+
+.status-submitted-pill {
+  background: #fef3c7 !important;
+  color: #92400e !important;
+  border: 1px solid #fcd34d !important;
+  font-weight: 700 !important;
+}
+
+.status-completed-pill {
+  background: #dcfce7 !important;
+  color: #15803d !important;
+  border: 1px solid #86efac !important;
+  font-weight: 700 !important;
+}
+

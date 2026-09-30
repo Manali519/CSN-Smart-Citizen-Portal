@@ -9,7 +9,7 @@ export async function listMyComplaints(req, res, next) {
   try {
     const { status } = req.query; // 'pending' | 'in-progress' | 'resolved' | undefined (= all)
 
-    const filter = { citizen: req.user._id };
+    const filter = { $or: [{ citizen: req.user._id }, { user: req.user._id }] };
     if (status && ['pending', 'in-progress', 'resolved'].includes(status)) {
       filter.status = status;
     }
@@ -17,6 +17,45 @@ export async function listMyComplaints(req, res, next) {
     const complaints = await Complaint.find(filter).sort({ createdAt: -1 });
 
     return res.status(200).json({ success: true, complaints });
+  } catch (err) {
+    next(err);
+  }
+}
+
+/**
+ * Creates a new civic complaint registered by the logged-in citizen.
+ */
+export async function createComplaint(req, res, next) {
+  try {
+    const { title, description, category, location } = req.body;
+    const complaintCode = `SC-${new Date().getFullYear()}-${Math.floor(10000 + Math.random() * 90000)}`;
+
+    const complaint = await Complaint.create({
+      complaintCode,
+      user: req.user._id,
+      title: title || `${category || 'Civic'} Issue`,
+      description: description || '',
+      location: {
+        address: typeof location === 'string' ? location : location?.address || 'Chhatrapati Sambhajinagar',
+        city: 'Chhatrapati Sambhajinagar',
+      },
+      status: 'Pending',
+      statusHistory: [
+        {
+          status: 'Pending',
+          changedBy: req.user._id,
+          changedByModel: 'User',
+          remarks: 'Complaint lodged by citizen',
+          changedAt: new Date(),
+        },
+      ],
+    });
+
+    return res.status(201).json({
+      success: true,
+      message: `Complaint registered successfully with reference ${complaintCode}.`,
+      complaint,
+    });
   } catch (err) {
     next(err);
   }

@@ -73,7 +73,7 @@ const FACILITIES = [
       </svg>
     ),
     title: 'Zonal Administration Offices',
-    count: '5',
+    count: '10',
     desc: 'Decentralised civic centres for property tax, birth/death records, and certificates.',
     keySpots: 'Zone 1 (Delhi Gate), Zone 2 (CIDCO N-1), Zone 3 (Osmanpura), Zone 4 (Harsul), Zone 5 (Station)',
   },

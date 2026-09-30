@@ -37,12 +37,40 @@ const serviceRequestSchema = new Schema(
     },
     status: {
       type: String,
-      enum: ['pending', 'scheduled', 'completed', 'cancelled'],
-      default: 'pending',
+      enum: [
+        'pending',
+        'request_submitted',
+        'Request Submitted',
+        'request_accepted',
+        'Request Accepted.arriving shortly',
+        'scheduled',
+        'in_progress',
+        'Work in Progress',
+        'completed',
+        'Completed',
+        'cancelled',
+      ],
+      default: 'Request Submitted',
       index: true,
+    },
+    routedDepartment: {
+      type: String,
+      default: null,
+    },
+    acceptedBy: {
+      type: Schema.Types.ObjectId,
+      ref: 'Officer',
+      default: null,
+    },
+    rating: {
+      type: Number,
+      min: 1,
+      max: 5,
+      default: null,
     },
   },
   { timestamps: true }
 );
 
 export const ServiceRequest = mongoose.model('ServiceRequest', serviceRequestSchema);
+

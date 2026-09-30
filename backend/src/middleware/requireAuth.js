@@ -1,7 +1,6 @@
 import { verifySessionToken } from '../utils/token.js';
 import { User } from '../models/User.js';
 
-/** Protects a route: requires a valid session cookie, attaches the verified user to req.user. */
 export async function requireAuth(req, res, next) {
   try {
     const token = req.cookies?.session;
@@ -9,8 +8,15 @@ export async function requireAuth(req, res, next) {
       return res.status(401).json({ success: false, message: 'Please log in to continue.' });
     }
 
+    if (User.db?.readyState !== 1) {
+      return res.status(503).json({
+        success: false,
+        message: 'Authentication service is temporarily unavailable. Please try again later.',
+      });
+    }
+
     const payload = verifySessionToken(token);
-    const user = await User.findById(payload.sub);
+    const user = await User.findById(payload.sub).maxTimeMS(4000);
 
     if (!user || !user.isVerified) {
       return res.status(401).json({ success: false, message: 'Session is no longer valid. Please log in again.' });

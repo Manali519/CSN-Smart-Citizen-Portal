@@ -34,46 +34,9 @@ const ICONS = {
       <rect x="10" y="8" width="5" height="13" rx="1" />
       <rect x="17" y="3" width="5" height="18" rx="1" />
     </svg>
-  ),
-  updates: (
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7">
-      <circle cx="12" cy="12" r="9" />
-      <path d="M12 7v5l3 3" strokeLinecap="round" strokeLinejoin="round" />
-    </svg>
-  ),
-  heatmap: (
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7">
-      <path d="M12 2a8 8 0 0 0-8 8c0 5.25 8 12 8 12s8-6.75 8-12a8 8 0 0 0-8-8z" />
-      <circle cx="12" cy="10" r="3" />
-    </svg>
-  ),
+  )
 };
-
 const SERVICES = [
-  {
-    icon: 'city',
-    title: 'Know Your City',
-    desc: 'Ward maps, zonal offices, and city facilities at a glance.',
-    to: '/know-your-city',
-  },
-  {
-    icon: 'issue',
-    title: 'Register a Complaint',
-    desc: 'Report potholes, garbage, streetlights, drainage and more.',
-    to: '/register-complaint',
-  },
-  {
-    icon: 'track',
-    title: 'Track Your Complaint',
-    desc: 'Check live status of a complaint using your reference number.',
-    to: '/track-complaint',
-  },
-  {
-    icon: 'water',
-    title: 'Water Request',
-    desc: 'Request a tanker, report a leak, or check supply timings.',
-    to: '/water-request',
-  },
   {
     icon: 'dashboard',
     title: 'City Analytical Dashboard',
@@ -91,7 +54,7 @@ const SERVICES = [
     title: 'Live Heatmap',
     desc: 'Identify hotspot areas.',
     to: '/live-heatmap',
-  },
+  }
 ];
 
 export default function ServiceGrid() {

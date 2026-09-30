@@ -1,0 +1,689 @@
+/* ─── Live Tracking Page Styles ───────────────────────────────────────── */
+.live-tracking-page {
+  background-color: #F1F5F9;
+  min-height: calc(100vh - var(--nav-height));
+  padding-bottom: 60px;
+}
+
+/* ─── Top Strip ──────────────────────────────────────────────────────── */
+.tracking-top-strip {
+  background: #0F172A;
+  color: #FFFFFF;
+  padding: 14px 0;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.top-strip-inner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.order-pill {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 0.9rem;
+}
+
+.live-pulsing-dot {
+  width: 10px;
+  height: 10px;
+  background: #22C55E;
+  border-radius: 50%;
+  display: inline-block;
+  box-shadow: 0 0 0 0 rgba(34, 197, 94, 0.7);
+  animation: pulseGreen 1.6s infinite;
+}
+
+@keyframes pulseGreen {
+  0% { box-shadow: 0 0 0 0 rgba(34, 197, 94, 0.7); }
+  70% { box-shadow: 0 0 0 10px rgba(34, 197, 94, 0); }
+  100% { box-shadow: 0 0 0 0 rgba(34, 197, 94, 0); }
+}
+
+.pill-divider {
+  opacity: 0.4;
+}
+
+.top-strip-actions {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.btn-cert-pill {
+  background: rgba(2, 132, 199, 0.25);
+  color: #7DD3FC;
+  border: 1px solid #0284C7;
+  padding: 6px 14px;
+  border-radius: 9999px;
+  font-size: 0.78rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.18s ease;
+}
+
+.btn-cert-pill:hover {
+  background: #0284C7;
+  color: #FFFFFF;
+}
+
+.link-back-dash {
+  color: #94A3B8;
+  font-size: 0.82rem;
+  text-decoration: none;
+  font-weight: 600;
+}
+
+.link-back-dash:hover {
+  color: #FFFFFF;
+}
+
+/* ─── Main Grid Layout ───────────────────────────────────────────────── */
+.tracking-main-grid {
+  display: grid;
+  grid-template-columns: 1.4fr 1fr;
+  gap: 24px;
+  margin-top: 24px;
+}
+
+/* ─── Left Column: Map Card ──────────────────────────────────────────── */
+.map-wrapper-card {
+  background: #FFFFFF;
+  border-radius: 20px;
+  border: 1px solid #E2E8F0;
+  overflow: hidden;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
+  position: relative;
+  display: flex;
+  flex-direction: column;
+}
+
+.live-map-canvas {
+  height: 520px;
+  width: 100%;
+  z-index: 1;
+}
+
+/* ─── Floating Telemetry Overlay ─────────────────────────────────────── */
+.map-overlay-telemetry {
+  position: absolute;
+  top: 16px;
+  left: 16px;
+  right: 16px;
+  z-index: 10;
+  display: flex;
+  gap: 12px;
+  pointer-events: none;
+}
+
+.telemetry-box {
+  background: rgba(15, 23, 42, 0.85);
+  backdrop-filter: blur(8px);
+  color: #FFFFFF;
+  padding: 10px 16px;
+  border-radius: 12px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  pointer-events: auto;
+  flex: 1;
+}
+
+.telemetry-box small {
+  display: block;
+  font-size: 0.68rem;
+  color: #94A3B8;
+  text-transform: uppercase;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+}
+
+.telemetry-box strong {
+  display: block;
+  font-size: 1.15rem;
+  font-weight: 800;
+  color: #38BDF8;
+  margin-top: 2px;
+}
+
+/* ─── Simulator Controller ───────────────────────────────────────────── */
+.sim-controller-bar {
+  background: #F8FAFC;
+  border-top: 1px solid #E2E8F0;
+  padding: 12px 18px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  z-index: 10;
+  flex-wrap: wrap;
+}
+
+.sim-label {
+  font-size: 0.78rem;
+  font-weight: 750;
+  color: #475569;
+  text-transform: uppercase;
+}
+
+.sim-btn {
+  background: #FFFFFF;
+  border: 1.5px solid #CBD5E1;
+  padding: 6px 14px;
+  border-radius: 8px;
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: #334155;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.sim-btn:hover {
+  background: #E2E8F0;
+  color: #0F172A;
+}
+
+.sim-btn-arrive {
+  background: #FEF2F2;
+  border-color: #F87171;
+  color: #991B1B;
+  margin-left: auto;
+}
+
+.sim-btn-arrive:hover {
+  background: #FEE2E2;
+}
+
+/* ─── Custom Leaflet Pins ────────────────────────────────────────────── */
+.custom-leaflet-marker {
+  background: none;
+  border: none;
+}
+
+.marker-pin-wrap {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.28);
+  position: relative;
+  border: 2.5px solid #FFFFFF;
+}
+
+.pin-truck {
+  background: linear-gradient(135deg, #0284C7 0%, #0369A1 100%);
+}
+
+.pin-reservoir {
+  background: linear-gradient(135deg, #2563EB 0%, #1D4ED8 100%);
+}
+
+.pin-home {
+  background: linear-gradient(135deg, #16A34A 0%, #15803D 100%);
+}
+
+.marker-emoji {
+  font-size: 1.4rem;
+  line-height: 1;
+}
+
+.marker-pulse-ring {
+  position: absolute;
+  inset: -8px;
+  border: 3px solid #0284C7;
+  border-radius: 50%;
+  animation: radarPing 1.8s infinite;
+}
+
+@keyframes radarPing {
+  0% { transform: scale(0.8); opacity: 1; }
+  100% { transform: scale(1.6); opacity: 0; }
+}
+
+/* ─── Right Column: Details Cards ────────────────────────────────────── */
+.details-column {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+/* ─── Driver Card ────────────────────────────────────────────────────── */
+.zomato-driver-card {
+  background: #FFFFFF;
+  border-radius: 16px;
+  border: 1px solid #E2E8F0;
+  padding: 18px 20px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.05);
+}
+
+.driver-top-row {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin-bottom: 14px;
+}
+
+.driver-avatar {
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 2.5px solid #0284C7;
+}
+
+.assigned-tag {
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  color: #0284C7;
+  font-weight: 750;
+  letter-spacing: 0.04em;
+}
+
+.driver-details h3 {
+  font-size: 1.15rem;
+  font-weight: 800;
+  color: #0F172A;
+  margin: 2px 0 4px;
+}
+
+.driver-subline {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 0.8rem;
+  color: #64748B;
+}
+
+.driver-rating {
+  background: #15803D;
+  color: #FFFFFF;
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-weight: 700;
+}
+
+.driver-vehicle-box {
+  background: #F8FAFC;
+  border: 1px solid #E2E8F0;
+  border-radius: 8px;
+  padding: 10px 14px;
+  margin-bottom: 14px;
+}
+
+.vehicle-line {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.82rem;
+  padding: 2px 0;
+}
+
+.vehicle-line span {
+  color: #64748B;
+}
+
+.vehicle-line strong {
+  color: #0F172A;
+}
+
+.driver-actions-row {
+  display: flex;
+  gap: 10px;
+}
+
+.btn-call-driver {
+  flex: 1;
+  background: #16A34A;
+  color: #FFFFFF;
+  border: none;
+  font-weight: 750;
+  font-size: 0.88rem;
+  padding: 10px;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.18s ease;
+  box-shadow: 0 2px 8px rgba(22, 163, 74, 0.25);
+}
+
+.btn-call-driver:hover {
+  background: #15803D;
+}
+
+.btn-instructions {
+  background: #F1F5F9;
+  color: #334155;
+  border: 1px solid #CBD5E1;
+  font-weight: 700;
+  font-size: 0.85rem;
+  padding: 10px 14px;
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+.btn-instructions:hover {
+  background: #E2E8F0;
+}
+
+/* ─── Status Stepper Card ────────────────────────────────────────────── */
+.zomato-status-card {
+  background: #FFFFFF;
+  border-radius: 16px;
+  border: 1px solid #E2E8F0;
+  padding: 18px 20px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.05);
+}
+
+.status-card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 16px;
+}
+
+.status-card-header h2 {
+  font-size: 1.05rem;
+  font-weight: 800;
+  margin: 0;
+  color: #0F172A;
+}
+
+.live-status-pill {
+  background: #E0F2FE;
+  color: #0369A1;
+  font-size: 0.74rem;
+  font-weight: 800;
+  padding: 4px 10px;
+  border-radius: 9999px;
+  border: 1px solid #BAE6FD;
+}
+
+.order-stepper {
+  position: relative;
+  padding-left: 28px;
+}
+
+.order-stepper::before {
+  content: '';
+  position: absolute;
+  left: 12px;
+  top: 8px;
+  bottom: 18px;
+  width: 2px;
+  background: #E2E8F0;
+}
+
+.step-item {
+  position: relative;
+  margin-bottom: 18px;
+}
+
+.step-item:last-child {
+  margin-bottom: 0;
+}
+
+.step-indicator {
+  position: absolute;
+  left: -28px;
+  top: 0;
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  background: #E2E8F0;
+  color: #64748B;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.8rem;
+  font-weight: 800;
+  border: 2px solid #FFFFFF;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.step-item.completed .step-indicator {
+  background: #16A34A;
+  color: #FFFFFF;
+}
+
+.step-item.active .step-indicator {
+  background: #0284C7;
+  color: #FFFFFF;
+  box-shadow: 0 0 0 4px rgba(2, 132, 199, 0.2);
+}
+
+.step-text strong {
+  display: block;
+  font-size: 0.88rem;
+  color: #0F172A;
+}
+
+.step-text p {
+  font-size: 0.78rem;
+  color: #64748B;
+  margin: 2px 0 0;
+  line-height: 1.35;
+}
+
+/* ─── Specs Card ─────────────────────────────────────────────────────── */
+.delivery-specs-card {
+  background: #FFFFFF;
+  border-radius: 16px;
+  border: 1px solid #E2E8F0;
+  padding: 16px 20px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.05);
+}
+
+.delivery-specs-card h4 {
+  font-size: 0.88rem;
+  font-weight: 750;
+  color: #0F172A;
+  margin: 0 0 8px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.specs-address {
+  font-size: 0.84rem;
+  color: #475569;
+  margin: 0 0 12px;
+}
+
+.specs-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  background: #F8FAFC;
+  padding: 10px 12px;
+  border-radius: 8px;
+}
+
+.specs-grid small {
+  display: block;
+  font-size: 0.68rem;
+  color: #64748B;
+  text-transform: uppercase;
+}
+
+.specs-grid strong {
+  display: block;
+  font-size: 0.82rem;
+  color: #0F172A;
+}
+
+/* ─── Call Simulator Modal ───────────────────────────────────────────── */
+.call-simulator-modal {
+  background: #0F172A;
+  color: #FFFFFF;
+  border-radius: 24px;
+  padding: 32px 28px;
+  text-align: center;
+  max-width: 360px;
+  width: 100%;
+  animation: scaleUp 0.2s ease;
+}
+
+.calling-avatar-ring {
+  width: 90px;
+  height: 90px;
+  border-radius: 50%;
+  margin: 0 auto 16px;
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.calling-avatar {
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 3px solid #22C55E;
+}
+
+.call-simulator-modal h3 {
+  font-size: 1.3rem;
+  margin: 0 0 4px;
+}
+
+.calling-vehicle {
+  color: #94A3B8;
+  font-size: 0.85rem;
+  margin: 0 0 12px;
+}
+
+.call-timer {
+  font-size: 1.4rem;
+  font-weight: 750;
+  color: #22C55E;
+  margin-bottom: 16px;
+  font-family: monospace;
+}
+
+.call-sim-note {
+  font-size: 0.84rem;
+  color: #CBD5E1;
+  font-style: italic;
+  margin-bottom: 24px;
+  line-height: 1.4;
+}
+
+.btn-hangup {
+  background: #EF4444;
+  color: #FFFFFF;
+  border: none;
+  font-weight: 750;
+  padding: 12px 28px;
+  border-radius: 9999px;
+  font-size: 0.95rem;
+  cursor: pointer;
+  box-shadow: 0 4px 14px rgba(239, 68, 68, 0.4);
+}
+
+/* ─── Purity Certificate Modal ───────────────────────────────────────── */
+.cert-modal {
+  background: #FFFFFF;
+  border-radius: 20px;
+  max-width: 580px;
+  width: 100%;
+  overflow: hidden;
+  box-shadow: 0 20px 48px rgba(0, 0, 0, 0.25);
+  animation: scaleUp 0.2s ease;
+}
+
+.cert-header {
+  background: #F0FDF4;
+  border-bottom: 1px solid #BBF7D0;
+  padding: 18px 24px;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.cert-emblem {
+  font-size: 2.2rem;
+}
+
+.cert-header h3 {
+  font-size: 1.05rem;
+  color: #14532D;
+  margin: 0 0 2px;
+}
+
+.cert-header small {
+  color: #166534;
+  font-weight: 600;
+}
+
+.cert-body {
+  padding: 24px;
+  position: relative;
+}
+
+.cert-stamp {
+  position: absolute;
+  top: 24px;
+  right: 24px;
+  border: 2.5px solid #16A34A;
+  color: #16A34A;
+  font-size: 0.8rem;
+  font-weight: 900;
+  padding: 4px 10px;
+  border-radius: 4px;
+  transform: rotate(-10deg);
+  letter-spacing: 0.05em;
+}
+
+.cert-body h4 {
+  font-size: 1.1rem;
+  color: #0F172A;
+  margin: 0 0 4px;
+}
+
+.cert-body p {
+  font-size: 0.85rem;
+  color: #64748B;
+  margin: 0 0 16px;
+}
+
+.cert-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.84rem;
+  margin-bottom: 16px;
+}
+
+.cert-table th,
+.cert-table td {
+  padding: 8px 10px;
+  text-align: left;
+  border-bottom: 1px solid #E2E8F0;
+}
+
+.cert-table th {
+  background: #F8FAFC;
+  color: #475569;
+  font-weight: 750;
+}
+
+.pass-text {
+  color: #16A34A;
+  font-weight: 800;
+}
+
+.cert-footer-text {
+  font-size: 0.78rem;
+  color: #64748B;
+  line-height: 1.4;
+  margin: 0;
+}
+
+@media (max-width: 900px) {
+  .tracking-main-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .live-map-canvas {
+    height: 380px;
+  }
+}

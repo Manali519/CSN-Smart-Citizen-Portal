@@ -1,8 +1,11 @@
 import React, { useEffect, useState, useCallback, useMemo } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { getCurrentUser, logout, completeProfile } from '../api/auth.js';
-import { fetchMyComplaints, submitComplaintFeedback } from '../api/complaints.js';
+import { fetchMyComplaints, submitComplaintFeedback } from '../services/complaints/index.js';
 import { fetchMyRequests, createServiceRequest } from '../api/requests.js';
+import { fetchMyTankerBookings, fetchMyGarbageBookings } from '../services/bookings/index.js';
+import { submitServiceRating } from '../services/officer/index.js';
+import ServiceRating from '../components/ServiceRating.jsx';
 import './Dashboard.css';
 
 const COMPLAINT_TABS = [
@@ -114,6 +117,10 @@ export default function Dashboard() {
       .finally(() => setComplaintsLoading(false));
   }, [user]);
 
+  const [tankerBookings, setTankerBookings] = useState([]);
+  const [tankerLoading, setTankerLoading] = useState(false);
+  const [garbageBookings, setGarbageBookings] = useState([]);
+
   const loadRequests = useCallback(() => {
     if (!user) return;
     setRequestsLoading(true);
@@ -121,7 +128,32 @@ export default function Dashboard() {
       .then((res) => setRequests(res.requests || []))
       .catch(() => setRequests([]))
       .finally(() => setRequestsLoading(false));
+
+    fetchMyGarbageBookings()
+      .then((res) => setGarbageBookings(res.bookings || []))
+      .catch(() => setGarbageBookings([]));
+
+    setTankerLoading(true);
+    fetchMyTankerBookings()
+      .then((res) => setTankerBookings(res.bookings || []))
+      .catch(() => setTankerBookings([]))
+      .finally(() => setTankerLoading(false));
   }, [user]);
+
+  const handleServiceRatingSubmit = async ({ requestId, type, rating, review }) => {
+    await submitServiceRating({ requestId, type, rating, review });
+    loadRequests();
+  };
+
+  const hasAcceptedRequest = useMemo(() => {
+    const isAccepted = (s) =>
+      (s || '').toLowerCase().includes('accepted') ||
+      (s || '').toLowerCase().includes('shortly');
+    return (
+      requests.some((r) => isAccepted(r.status)) ||
+      garbageBookings.some((b) => isAccepted(b.status))
+    );
+  }, [requests, garbageBookings]);
 
   useEffect(() => { loadComplaints(); }, [loadComplaints]);
   useEffect(() => { loadRequests(); }, [loadRequests]);
@@ -241,12 +273,26 @@ export default function Dashboard() {
             >
               Complaints
             </button>
+            <Link
+              to="/services/water-tanker"
+              className="nav-button"
+              style={{ textDecoration: 'none', textAlign: 'left' }}
+            >
+              💧 Book Water Tanker
+            </Link>
+            <Link
+              to="/services/garbage-van"
+              className="nav-button"
+              style={{ textDecoration: 'none', textAlign: 'left' }}
+            >
+              🚛 Garbage Vans
+            </Link>
             <button
               type="button"
-              className={`nav-button ${activeNav === 'book-tanker' ? 'active' : ''}`}
-              onClick={() => { setActiveNav('book-tanker'); setIsProfileOpen(false); }}
+              className={`nav-button ${activeNav === 'my-bookings' ? 'active' : ''}`}
+              onClick={() => { setActiveNav('my-bookings'); setIsProfileOpen(false); }}
             >
-              Book tanker
+              📍 Active Bookings ({tankerBookings.length})
             </button>
           </nav>
 
@@ -260,6 +306,16 @@ export default function Dashboard() {
               <h1>{user.firstName || 'Citizen'} {user.lastName || ''}</h1>
             </div>
           </div>
+
+          {hasAcceptedRequest && (
+            <div className="citizen-mock-notification-alert" role="alert">
+              <span className="notif-alert-bell">🔔</span>
+              <div className="notif-alert-content">
+                <strong>Officer Notification Alert</strong>
+                <p>Your request has been accepted by the officer. Service arriving shortly.</p>
+              </div>
+            </div>
+          )}
 
           {showProfileCard && (
             <div className="dashboard-card profile-card">
@@ -390,6 +446,104 @@ export default function Dashboard() {
                     </ul>
                   )}
                 </div>
+
+                {/* Civic Service Requests & Dynamic Department Bookings */}
+                <div className="dashboard-card" style={{ marginTop: '20px' }}>
+                  <div className="dashboard-card-header">
+                    <h2>Civic Service Requests &amp; Department Orders</h2>
+                    <span className="status-pill status-in-progress">
+                      {requests.length + garbageBookings.length} Active
+                    </span>
+                  </div>
+
+                  {requestsLoading ? (
+                    <p className="muted">Loading service requests&hellip;</p>
+                  ) : requests.length === 0 && garbageBookings.length === 0 ? (
+                    <p className="muted">
+                      No service requests booked yet. Use the services panel to book water tankers or garbage vans.
+                    </p>
+                  ) : (
+                    <div className="citizen-requests-list">
+                      {/* Water Tanker / Standard Service Requests */}
+                      {requests.map((r) => {
+                        const isCompleted =
+                          (r.status || '').toLowerCase().includes('completed') ||
+                          r.status === 'resolved';
+
+                        return (
+                          <div key={r._id} className="citizen-request-item">
+                            <div className="citizen-req-top">
+                              <span className="citizen-req-ref">{r.referenceNo}</span>
+                              {renderServiceStatusPill(r.status)}
+                            </div>
+
+                            <div className="citizen-req-meta">
+                              <strong>
+                                {r.type === 'water_tanker' ? '💧 Water Tanker Request' : '🚛 Garbage Van Request'}
+                              </strong>
+                              <span className="citizen-req-dept">
+                                🏛️ Routed to: {r.routedDepartment || 'Water Supply and Drainage Department'}
+                              </span>
+                            </div>
+
+                            <p className="citizen-req-address">📍 {r.address}</p>
+                            {r.notes && <p className="citizen-req-notes">📝 {r.notes}</p>}
+
+                            {/* Requirement 3: Reveal rating interface component on Completed status */}
+                            {isCompleted && (
+                              <ServiceRating
+                                requestId={r._id}
+                                requestType={r.type || 'service_request'}
+                                initialRating={r.rating}
+                                onRatingSubmitted={handleServiceRatingSubmit}
+                              />
+                            )}
+                          </div>
+                        );
+                      })}
+
+                      {/* Garbage Van Bookings */}
+                      {garbageBookings.map((b) => {
+                        const isCompleted =
+                          (b.status || '').toLowerCase().includes('completed') ||
+                          b.status === 'resolved';
+
+                        return (
+                          <div key={b._id} className="citizen-request-item">
+                            <div className="citizen-req-top">
+                              <span className="citizen-req-ref">{b.bookingId}</span>
+                              {renderServiceStatusPill(b.status)}
+                            </div>
+
+                            <div className="citizen-req-meta">
+                              <strong>🚛 Garbage Van Pickup</strong>
+                              <span className="citizen-req-dept">
+                                🏛️ Routed to: {b.routedDepartment || 'Sanitation Department'}
+                              </span>
+                            </div>
+
+                            <p className="citizen-req-details">
+                              Waste: <strong>{b.wasteLabels?.join(', ') || b.wasteLabel || 'Solid Waste'}</strong> • Volume: {b.volume} • Slot: {b.timeSlot}
+                            </p>
+                            <p className="citizen-req-address">
+                              📍 {b.pickupAddress?.streetAddress || b.pickupAddress?.fullName || 'Registered Address'}
+                            </p>
+
+                            {/* Requirement 3: Reveal rating interface component on Completed status */}
+                            {isCompleted && (
+                              <ServiceRating
+                                requestId={b._id}
+                                requestType="garbage_booking"
+                                initialRating={b.rating}
+                                onRatingSubmitted={handleServiceRatingSubmit}
+                              />
+                            )}
+                          </div>
+                        );
+                      })}
+                    </div>
+                  )}
+                </div>
               </div>
 
               <div className="dashboard-column dashboard-column-right">
@@ -401,27 +555,89 @@ export default function Dashboard() {
 
                   <div className="quick-action-list">
                     <Link to="/register-complaint" className="quick-action-item">
-                      <span className="quick-action-icon">+</span>
+                      <span className="quick-action-icon">📝</span>
                       <div>
                         <strong>Register a complaint</strong>
                         <small>Report civic issues and service problems</small>
                       </div>
                     </Link>
-                    <Link to="/track-complaint" className="quick-action-item">
-                      <span className="quick-action-icon">↗</span>
+                    <Link to="/services/water-tanker" className="quick-action-item" style={{ background: '#F0F9FF', borderColor: '#BAE6FD' }}>
+                      <span className="quick-action-icon">💧</span>
                       <div>
-                        <strong>Track a complaint</strong>
-                        <small>Monitor status and updates in real time</small>
+                        <strong>Water Tanker (Zomato-Style)</strong>
+                        <small>Select 1000L-20000L, source, pay cash/UPI &amp; track GPS</small>
                       </div>
                     </Link>
-                    <button type="button" className="quick-action-item quick-action-button" onClick={() => { setActiveNav('book-tanker'); setIsProfileOpen(false); }}>
-                      <span className="quick-action-icon">🚰</span>
+                    <Link to="/services/garbage-van" className="quick-action-item" style={{ background: '#F0FDF4', borderColor: '#BBF7D0' }}>
+                      <span className="quick-action-icon">🚛</span>
                       <div>
-                        <strong>Book a tanker</strong>
-                        <small>Schedule water delivery in minutes</small>
+                        <strong>Garbage Vans</strong>
+                        <small>Schedule municipal waste and debris pickup</small>
                       </div>
-                    </button>
+                    </Link>
                   </div>
+
+                  {/* Active Tanker Bookings with Live GPS Tracking */}
+                  {tankerBookings.length > 0 && (
+                    <div className="tanker-bookings-live-section" style={{ marginTop: '16px', marginBottom: '20px' }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
+                        <h3 style={{ fontSize: '1rem', fontWeight: 800, margin: 0, color: '#0F172A' }}>
+                          📍 Live Tanker Orders ({tankerBookings.length})
+                        </h3>
+                        <Link to="/services/water-tanker" style={{ fontSize: '0.8rem', color: '#0284C7', fontWeight: 700 }}>
+                          + Book Another
+                        </Link>
+                      </div>
+
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                        {tankerBookings.map((b) => (
+                          <div
+                            key={b._id}
+                            style={{
+                              background: '#FFFFFF',
+                              border: '1.5px solid #BAE6FD',
+                              borderRadius: '12px',
+                              padding: '14px',
+                              boxShadow: '0 2px 8px rgba(2, 132, 199, 0.08)',
+                            }}
+                          >
+                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px' }}>
+                              <span style={{ fontFamily: 'monospace', fontWeight: 800, color: '#0284C7', fontSize: '0.85rem' }}>
+                                #{b.bookingId}
+                              </span>
+                              <span className="status-pill status-in-progress" style={{ textTransform: 'uppercase', fontSize: '0.72rem' }}>
+                                {b.status}
+                              </span>
+                            </div>
+
+                            <div style={{ fontSize: '0.9rem', fontWeight: 750, color: '#0F172A', marginBottom: '2px' }}>
+                              💧 {b.quantity?.toLocaleString()}L Tanker from {b.waterSource?.name}
+                            </div>
+                            <div style={{ fontSize: '0.78rem', color: '#64748B', marginBottom: '8px' }}>
+                              Driver: <strong>{b.driver?.name}</strong> ({b.driver?.vehicleNo}) • Total: <strong>₹{b.pricing?.totalAmount}</strong> ({b.payment?.method?.toUpperCase()})
+                            </div>
+
+                            <Link
+                              to={`/track-tanker/${b.bookingId}`}
+                              className="btn btn-primary"
+                              style={{
+                                display: 'block',
+                                textAlign: 'center',
+                                textDecoration: 'none',
+                                padding: '8px 14px',
+                                fontSize: '0.84rem',
+                                fontWeight: 750,
+                                background: 'linear-gradient(135deg, #0284C7 0%, #0369A1 100%)',
+                                borderRadius: '8px',
+                              }}
+                            >
+                              🚀 Track Tanker Live (Zomato GPS) &rarr;
+                            </Link>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
 
                   <div className="tanker-card">
                     <div className="tanker-header-row">
@@ -543,4 +759,19 @@ export default function Dashboard() {
 
 function formatStatus(status) {
   return status.replace('-', ' ').replace(/\b\w/g, (c) => c.toUpperCase());
+}
+
+function renderServiceStatusPill(status = '') {
+  const s = (status || '').toLowerCase();
+  if (s.includes('accepted') || s.includes('shortly')) {
+    return (
+      <span className="status-pill status-accepted-shortly">
+        Request Accepted.arriving shortly
+      </span>
+    );
+  }
+  if (s.includes('completed') || s === 'resolved') {
+    return <span className="status-pill status-completed-pill">Completed</span>;
+  }
+  return <span className="status-pill status-submitted-pill">Request Submitted</span>;
 }
