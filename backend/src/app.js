@@ -49,8 +49,10 @@ export function createApp() {
     res.json({ success: true, status: 'ok', time: new Date().toISOString() });
   });
 
-  // Complaint photos (random UUID file names)
-  app.use('/uploads', express.static(complaintConfig.uploadDir, { index: false, dotfiles: 'deny', maxAge: '7d' }));
+  // Local photo storage (development only; production photos are served by Cloud Storage)
+  if (!complaintConfig.gcsBucket) {
+    app.use('/uploads', express.static(complaintConfig.uploadDir, { index: false, dotfiles: 'deny', maxAge: '7d' }));
+  }
 
   app.use('/api/auth', authRoutes);
   app.use('/api/complaints', complaintRoutes);

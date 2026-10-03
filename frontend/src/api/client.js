@@ -1,6 +1,8 @@
+// Empty in production: Vercel proxies /api to the Cloud Run backend (frontend/vercel.json).
 export const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || '';
 
-export const assetUrl = (path) => `${API_BASE_URL}${path}`;
+// Production photos are absolute Cloud Storage URLs; local-development photos are /uploads paths on the API.
+export const assetUrl = (path) => (/^https?:\/\//.test(path) ? path : `${API_BASE_URL}${path}`);
 
 export async function apiRequest(path, { method = 'POST', body } = {}) {
   const isForm = body instanceof FormData;

@@ -1,0 +1,52 @@
+.ci-head {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  align-items: flex-end;
+  gap: 16px;
+  margin-bottom: 20px;
+}
+
+.ci-head h1 {
+  font-family: var(--font-display);
+  margin: 0 0 6px;
+}
+
+.ci-head p {
+  margin: 0;
+  color: var(--ink-soft);
+}
+
+.ci-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 18px;
+  list-style: none;
+  padding: 0;
+  margin: 0 0 14px;
+  font-size: 0.9rem;
+}
+
+.ci-legend li {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.ci-dot {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+}
+
+.ci-error {
+  background: #FDECEA;
+  color: #B71C1C;
+  padding: 10px 12px;
+  border-radius: var(--radius-sm);
+}
+
+.ci-empty {
+  color: var(--ink-soft);
+  margin-top: 12px;
+}

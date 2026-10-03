@@ -255,7 +255,7 @@ export function getCurrentUser(req, res) {
 }
 
 export function logout(_req, res) {
-  res.clearCookie('session').status(200).json({ success: true, message: 'Logged out.' });
+  res.clearCookie('session', env.cookie).status(200).json({ success: true, message: 'Logged out.' });
 }
 
 /** Saves the profile details (all required; checked by completeProfileValidationRules). */
@@ -285,9 +285,7 @@ export async function completeProfile(req, res, next) {
 function setSessionCookie(res, user) {
   const token = signSessionToken(user);
   res.cookie('session', token, {
-    httpOnly: true,
-    secure: env.nodeEnv === 'production',
-    sameSite: 'lax',
+    ...env.cookie,
     maxAge: 7 * 24 * 60 * 60 * 1000,
   });
 }

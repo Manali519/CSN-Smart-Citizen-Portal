@@ -5,7 +5,7 @@ import { complaintConfig as cfg } from '../config/complaint.config.js';
 import { validateComplaint } from '../utils/mlClient.js';
 import { gpsFromExif, isValidPoint, inCity, toNum } from '../utils/location.js';
 import { generateReferenceNo } from '../utils/reference.js';
-import { saveImage, removeFile } from '../utils/imageStore.js';
+import { saveImage, removeImage } from '../utils/imageStore.js';
 import { sniffImageType } from '../middleware/upload.js';
 import { hashBands, hammingDistance } from '../utils/phash.js';
 
@@ -44,7 +44,7 @@ export function listCategories(_req, res) {
  * CLIP validation -> duplicate check -> route to department or hold for admin review.
  */
 export async function createComplaint(req, res, next) {
-  let savedPath = null;
+  let savedKey = null;
   try {
     const { file } = req;
     const category = String(req.body.category || '');
@@ -117,7 +117,7 @@ export async function createComplaint(req, res, next) {
     const status = routed ? 'Pending Review' : 'Suspected Fake';
 
     const image = await saveImage(file.buffer, imageType, 'complaints');
-    savedPath = image.filePath;
+    savedKey = image.key;
 
     const complaint = await Complaint.create({
       complaintCode: generateReferenceNo('CMP'),
@@ -144,7 +144,7 @@ export async function createComplaint(req, res, next) {
         },
       ],
     });
-    savedPath = null;
+    savedKey = null;
 
     const view = {
       _id: complaint._id,
@@ -174,7 +174,7 @@ export async function createComplaint(req, res, next) {
       complaint: view,
     });
   } catch (err) {
-    await removeFile(savedPath);
+    await removeImage(savedKey);
     next(err);
   }
 }
@@ -275,7 +275,7 @@ export async function reviewComplaint(req, res, next) {
  * Multipart: remarks (optional, max 1000 chars) and proof (optional photo of the fixed issue).
  */
 export async function resolveComplaint(req, res, next) {
-  let savedPath = null;
+  let savedKey = null;
   try {
     const { id } = req.params;
     if (!mongoose.isValidObjectId(id)) return fail(res, 400, 'BAD_ID', 'Invalid complaint id.');
@@ -290,7 +290,7 @@ export async function resolveComplaint(req, res, next) {
     }
 
     const proof = req.file ? await saveImage(req.file.buffer, proofType, 'complaint-proofs') : null;
-    savedPath = proof?.filePath ?? null;
+    savedKey = proof?.key ?? null;
 
     // Conditional update: a complaint is resolved once, and only by its own department.
     const complaint = await Complaint.findOneAndUpdate(
@@ -313,14 +313,14 @@ export async function resolveComplaint(req, res, next) {
       { new: true }
     );
     if (!complaint) {
-      await removeFile(savedPath);
+      await removeImage(savedKey);
       return fail(res, 404, 'NOT_FOUND', 'No open complaint with that id in your department.');
     }
-    savedPath = null;
+    savedKey = null;
 
     return res.json({ success: true, id: complaint._id, status: complaint.status, resolution: complaint.resolution });
   } catch (err) {
-    await removeFile(savedPath);
+    await removeImage(savedKey);
     next(err);
   }
 }

@@ -1,3 +1,4 @@
+import mongoose from 'mongoose';
 import { env } from './config/env.js';
 import { connectDB } from './config/db.js';
 import { verifyMailer } from './utils/mailer.js';
@@ -8,9 +9,18 @@ async function main() {
   await verifyMailer();
 
   const app = createApp();
-  app.listen(env.port, () => {
-    console.log(`[server] Smart City Portal API listening on http://localhost:${env.port}`);
+  const server = app.listen(env.port, () => {
+    console.log(`[server] Smart City Portal API listening on port ${env.port}`);
   });
+
+  // Cloud Run sends SIGTERM before replacing the instance: finish in-flight requests, then close the DB.
+  const shutdown = (signal) => {
+    console.log(`[server] ${signal} received, shutting down`);
+    setTimeout(() => process.exit(1), 10_000).unref();
+    server.close(() => mongoose.disconnect().finally(() => process.exit(0)));
+  };
+  process.once('SIGTERM', shutdown);
+  process.once('SIGINT', shutdown);
 }
 
 main().catch((err) => {
