@@ -10,6 +10,7 @@ const hasLocalCert = fs.existsSync(certPath) && fs.existsSync(keyPath);
 export default defineConfig(({ mode }) => {
   const env = loadEnv(mode, process.cwd(), '');
   const port = Number(env.PORT || '3000');
+  const apiTarget = env.VITE_API_URL || 'http://localhost:5000';
 
   return {
     plugins: [react()],
@@ -24,11 +25,8 @@ export default defineConfig(({ mode }) => {
           }
         : false,
       proxy: {
-        '/api': {
-          target: env.VITE_API_URL || 'http://localhost:5000',
-          changeOrigin: true,
-          secure: false,
-        },
+        '/api': { target: apiTarget, changeOrigin: true },
+        '/uploads': { target: apiTarget, changeOrigin: true },
       },
     },
     preview: {

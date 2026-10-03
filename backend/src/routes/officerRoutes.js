@@ -1,28 +1,35 @@
 import { Router } from 'express';
+import rateLimit from 'express-rate-limit';
 import {
   officerLogin,
+  officerLogout,
   listDepartmentRequests,
   acceptRequest,
   markComplete,
   submitRating,
 } from '../controllers/officerController.js';
+import { requireAuth } from '../middleware/requireAuth.js';
+import { requireStaff } from '../middleware/requireStaff.js';
 
 const router = Router();
 
-// Officer mock login (no auth middleware — mock credentials accepted)
-router.post('/login', officerLogin);
+const loginLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  limit: 15,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { success: false, message: 'Too many login attempts. Please try again later.' },
+});
 
-// List requests routed to a department
-// GET /api/officer/requests?department=Water Supply and Drainage Department
-router.get('/requests', listDepartmentRequests);
+router.post('/login', loginLimiter, officerLogin);
+router.post('/logout', officerLogout);
 
-// Accept a request (status → request_accepted, fires mock notification)
-router.post('/accept', acceptRequest);
+// Officer only; the department comes from the signed session
+router.get('/requests', requireStaff('officer'), listDepartmentRequests);
+router.post('/accept', requireStaff('officer'), acceptRequest);
+router.post('/complete', requireStaff('officer'), markComplete);
 
-// Mark request as completed
-router.post('/complete', markComplete);
-
-// Submit user rating for a completed request
-router.post('/rate', submitRating);
+// Citizen rates their own completed request
+router.post('/rate', requireAuth, submitRating);
 
 export default router;

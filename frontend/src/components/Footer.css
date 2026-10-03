@@ -21,13 +21,3 @@
   font-size: 0.85rem;
   color: var(--ink-soft);
 }
-
-.footer-inner nav {
-  display: flex;
-  gap: 18px;
-}
-
-.footer-inner nav a {
-  font-size: 0.85rem;
-  color: var(--ink-soft);
-}

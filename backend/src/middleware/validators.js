@@ -13,7 +13,7 @@ export function handleValidation(req, res, next) {
   next();
 }
 
-const MIN_AGE_YEARS = 5; // sanity floor; adjust to whatever the real policy is (e.g. 18)
+const MIN_AGE_YEARS = 5;
 
 function isValidPastDob(value) {
   const dob = new Date(value);
@@ -75,17 +75,6 @@ export const loginValidationRules = [
 
 export const googleLoginValidationRules = [
   body('googleIdToken').notEmpty().withMessage('Missing Google credential'),
-];
-
-export const serviceRequestValidationRules = [
-  body('type').isIn(['water_tanker', 'garbage_van']).withMessage('Invalid request type'),
-  body('address').trim().notEmpty().withMessage('Address is required').isLength({ max: 240 }),
-  body('preferredDate')
-    .notEmpty().withMessage('Preferred date is required')
-    .isISO8601().withMessage('Enter a valid date')
-    .custom((value) => new Date(value) >= new Date(new Date().toDateString()))
-    .withMessage('Preferred date cannot be in the past'),
-  body('notes').optional({ checkFalsy: true }).trim().isLength({ max: 300 }),
 ];
 
 export const complaintFeedbackValidationRules = [

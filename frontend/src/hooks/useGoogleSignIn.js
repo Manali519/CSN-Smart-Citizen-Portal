@@ -19,14 +19,6 @@ function loadGoogleScript() {
   return scriptLoadingPromise;
 }
 
-/**
- * Loads Google Identity Services and renders their official "Sign in
- * with Google" button into `buttonRef`. When the person completes
- * sign-in, `onCredential(idToken)` fires with the signed JWT credential
- * - that token is only trusted once the backend verifies it
- * (see server/src/utils/googleAuth.js). Nothing here should be treated
- * as "the user is authenticated" on its own.
- */
 export function useGoogleSignIn(onCredential) {
   const buttonRef = useRef(null);
   const callbackRef = useRef(onCredential);
@@ -68,4 +60,17 @@ export function useGoogleSignIn(onCredential) {
   }, []);
 
   return { buttonRef, ready, error };
+}
+
+/**
+ * Decodes a Google Identity Services JWT for display/prefill ONLY: no signature, expiry or audience check.
+ * The raw credential is sent to the backend as `googleIdToken`, which verifies it before trusting anything.
+ */
+export function decodeGoogleCredentialForDisplay(credential) {
+  try {
+    const payload = JSON.parse(atob(credential.split('.')[1].replace(/-/g, '+').replace(/_/g, '/')));
+    return { email: payload.email || '', firstName: payload.given_name || '', lastName: payload.family_name || '' };
+  } catch {
+    return { email: '', firstName: '', lastName: '' };
+  }
 }

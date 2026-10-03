@@ -1,16 +1,17 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import {
   fetchDepartmentRequests,
   acceptOfficerRequest,
   completeOfficerRequest,
+  officerLogoutApi,
 } from '../services/officer/index.js';
 import './OfficerDashboard.css';
 
 export default function OfficerDashboard() {
   const navigate = useNavigate();
 
-  // Read officer session securely from localStorage
+  // Display info only; the server authorises requests with the httpOnly session cookie.
   const [officerSession] = useState(() => {
     try {
       const saved = localStorage.getItem('officer_session');
@@ -29,34 +30,31 @@ export default function OfficerDashboard() {
   const [statusFilter, setStatusFilter] = useState('all');
   const [actionLoadingId, setActionLoadingId] = useState(null);
 
-  // Mock notification alert toast state
-  const [activeAlert, setActiveAlert] = useState(null);
-
   // Helper to load requests strictly isolated for this department
   const loadRequests = useCallback(async () => {
     setLoading(true);
     setError('');
     try {
-      const res = await fetchDepartmentRequests(officerDept);
+      const res = await fetchDepartmentRequests();
       setRequests(res.requests || []);
     } catch (err) {
+      if (err.status === 401 || err.status === 403) {
+        localStorage.removeItem('officer_session');
+        navigate('/officer-login');
+        return;
+      }
       setError(err.message || 'Failed to load department requests.');
       setRequests([]);
     } finally {
       setLoading(false);
     }
-  }, [officerDept]);
+  }, [navigate]);
 
   useEffect(() => {
     loadRequests();
   }, [loadRequests]);
 
-  /**
-   * Status Workflow Update:
-   * When officer clicks "Accept", update status immediately from
-   * "Request Submitted" to "Request Accepted.arriving shortly",
-   * and fire a mock notification alert hook to the end-user.
-   */
+  /** Accept: optimistic status update, reverted if the server rejects it. */
   const handleAccept = async (request) => {
     const targetId = request._id;
     setActionLoadingId(targetId);
@@ -71,26 +69,11 @@ export default function OfficerDashboard() {
       )
     );
 
-    // Dispatch mock notification alert hook
-    const mockNotification = {
-      id: Date.now(),
-      recipient: request.userName,
-      title: 'Request Accepted!',
-      message: 'Your request has been accepted by the officer. Service arriving shortly.',
-      status: newStatus,
-      timestamp: new Date().toLocaleTimeString(),
-    };
-
-    setActiveAlert(mockNotification);
-
     try {
-      const res = await acceptOfficerRequest({
+      await acceptOfficerRequest({
         requestId: targetId,
-        type: request.type || (officerDept.toLowerCase().includes('water') ? 'water_tanker' : 'garbage_booking'),
+        type: request.type,
       });
-      if (res?.notification) {
-        setActiveAlert(res.notification);
-      }
     } catch (err) {
       // Revert optimistic update on error
       setRequests(previousRequests);
@@ -100,11 +83,7 @@ export default function OfficerDashboard() {
     }
   };
 
-  /**
-   * Closure Workflow:
-   * "Mark as Complete" button on the Officer Dashboard for accepted requests.
-   * Clicking this flags the request status as "Completed".
-   */
+
   const handleMarkComplete = async (request) => {
     const targetId = request._id;
     setActionLoadingId(targetId);
@@ -121,7 +100,7 @@ export default function OfficerDashboard() {
     try {
       await completeOfficerRequest({
         requestId: targetId,
-        type: request.type || (officerDept.toLowerCase().includes('water') ? 'water_tanker' : 'garbage_booking'),
+        type: request.type,
       });
     } catch (err) {
       setRequests(previousRequests);
@@ -131,7 +110,12 @@ export default function OfficerDashboard() {
     }
   };
 
-  const handleLogout = () => {
+  const handleLogout = async () => {
+    try {
+      await officerLogoutApi();
+    } catch {
+      // ignore
+    }
     localStorage.removeItem('officer_session');
     navigate('/officer-login');
   };
@@ -187,6 +171,9 @@ export default function OfficerDashboard() {
               <span className="officer-name">{officerDept}</span>
               <span className="officer-id-tag">Officer ID: {displayOfficerId}</span>
             </div>
+            <Link to="/officer/complaints" className="btn-officer-logout">
+              Complaints
+            </Link>
             <button type="button" className="btn-officer-logout" onClick={handleLogout} title="Sign Out">
               Sign Out
             </button>

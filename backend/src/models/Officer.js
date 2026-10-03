@@ -1,70 +1,26 @@
 import mongoose from 'mongoose';
 import bcrypt from 'bcryptjs';
+import { DEPARTMENTS } from '../config/complaintCategories.js';
 
-/**
- * Officer
- * A department official who receives, acts on, and closes complaints.
- * "receivedComplaints" stores references only — status, photos, and
- * solution details live on the Complaint document itself.
- */
+/** Department officer. Created with `npm run create-officer`; logs in at /officer-login. */
 const officerSchema = new mongoose.Schema(
   {
-    officerName: {
-      type: String,
-      required: true,
-      trim: true,
-    },
-    employeeId: {
-      type: String,
-      required: true,
-      unique: true,
-      trim: true,
-    },
-    email: {
-      type: String,
-      required: true,
-      unique: true,
-      lowercase: true,
-      trim: true,
-    },
-    password: {
-      type: String,
-      required: true,
-      select: false,
-    },
-    contactNumber: {
-      type: String,
-      required: true,
-      trim: true,
-    },
-    department: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: "Department",
-      required: true,
-    },
-    receivedComplaints: [
-      {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: "Complaint",
-      },
-    ],
-    isActive: {
-      type: Boolean,
-      default: true,
-    },
+    officerId: { type: String, required: true, unique: true, lowercase: true, trim: true },
+    name: { type: String, trim: true },
+    department: { type: String, enum: DEPARTMENTS, required: true },
+    password: { type: String, required: true, select: false },
+    isActive: { type: Boolean, default: true },
   },
   { timestamps: true }
 );
 
-officerSchema.pre("save", async function (next) {
-  if (!this.isModified("password")) return next();
-  const salt = await bcrypt.genSalt(10);
-  this.password = await bcrypt.hash(this.password, salt);
-  next();
+officerSchema.pre('save', async function () {
+  if (!this.isModified('password')) return;
+  this.password = await bcrypt.hash(this.password, 10);
 });
 
-officerSchema.methods.comparePassword = function (candidatePassword) {
-  return bcrypt.compare(candidatePassword, this.password);
+officerSchema.methods.comparePassword = function (candidate) {
+  return bcrypt.compare(candidate, this.password);
 };
 
 export const Officer = mongoose.model('Officer', officerSchema);

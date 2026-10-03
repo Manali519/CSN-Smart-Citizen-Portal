@@ -1,9 +1,6 @@
-/* ============================================================
-   Design tokens
-   ============================================================ */
+
 :root {
-  /* Tricolor, used deliberately (hero band + small accents) rather than
-     smeared across every component. */
+ 
   --saffron: #FF9933;
   --saffron-deep: #E8791A;
   --white: #FFFFFF;
@@ -36,10 +33,7 @@
   --nav-height: 72px;
 }
 
-/* ============================================================
-   Reset
-   ============================================================ */
-*,
+
 *::before,
 *::after {
   box-sizing: border-box;
@@ -112,9 +106,6 @@ textarea:focus-visible {
   }
 }
 
-/* ============================================================
-   Shared layout helpers
-   ============================================================ */
 .container {
   width: 100%;
   max-width: var(--max-width);
@@ -170,15 +161,6 @@ textarea:focus-visible {
 .btn-outline:hover {
   background: var(--ink);
   color: var(--white);
-}
-
-.btn-on-dark {
-  background: var(--white);
-  color: var(--navy);
-}
-
-.btn-on-dark:hover {
-  background: var(--surface);
 }
 
 .visually-hidden {

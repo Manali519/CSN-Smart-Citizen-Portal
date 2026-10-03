@@ -8,8 +8,13 @@ function required(name, fallback = undefined) {
   return value;
 }
 
+const nodeEnv = process.env.NODE_ENV || 'development';
+
 export const env = {
-  nodeEnv: process.env.NODE_ENV || 'development',
+  nodeEnv,
+  // Number of reverse proxies in front of the API (e.g. 1 on Vercel/Render/nginx). Needed so rate limits
+  // see the real client IP; leave 0 when the API is reached directly, or clients could spoof their IP.
+  trustProxy: Number(process.env.TRUST_PROXY || 0),
   port: Number(process.env.PORT || 5000),
   clientOrigins: (process.env.CLIENT_ORIGINS || 'http://localhost:5173')
     .split(',')
@@ -38,4 +43,15 @@ export const env = {
     maxAttempts: Number(process.env.OTP_MAX_ATTEMPTS || 5),
     resendCooldownSeconds: Number(process.env.OTP_RESEND_COOLDOWN_SECONDS || 60),
   },
+
+  // Optional: the API boots without these; payment routes answer 503 until both are set.
+  razorpay: {
+    keyId: (process.env.RAZORPAY_KEY_ID || '').trim(),
+    keySecret: (process.env.RAZORPAY_KEY_SECRET || '').trim(),
+    currency: 'INR',
+  },
 };
+
+if (env.nodeEnv === 'production' && env.jwtSecret.length < 32) {
+  throw new Error('JWT_SECRET must be at least 32 characters in production.');
+}

@@ -7,12 +7,7 @@ import { hashPassword, comparePassword } from '../utils/password.js';
 import { sendOtpEmail } from '../utils/mailer.js';
 import { signSessionToken } from '../utils/token.js';
 
-/**
- * Step 1 of registration: validate the submitted details, create (or
- * reuse) an unverified User document, and email a fresh OTP to that
- * account's own address. No session/login happens here - only OTP
- * verification (below) unlocks the account.
- */
+/** Registration step 1: create or refresh an unverified account and email it an OTP. */
 export async function initiateRegistration(req, res, next) {
   try {
     const { signupMethod } = req.body;
@@ -91,7 +86,7 @@ export async function initiateRegistration(req, res, next) {
   }
 }
 
-/** Step 2: the citizen submits the OTP they received by email. */
+/** Registration step 2: a correct OTP verifies the account and starts a session. */
 export async function verifyRegistrationOtp(req, res, next) {
   try {
     const { email, otp } = req.body;
@@ -135,31 +130,14 @@ export async function verifyRegistrationOtp(req, res, next) {
     await user.save();
     await Otp.deleteMany({ user: user._id, purpose: 'REGISTER' });
 
-    const token = signSessionToken(user);
-    res
-      .cookie('session', token, {
-        httpOnly: true,
-        secure: env.nodeEnv === 'production',
-        sameSite: 'lax',
-        maxAge: 7 * 24 * 60 * 60 * 1000,
-      })
-      .status(200)
-      .json({
-        success: true,
-        message: 'Account verified successfully.',
-        user: {
-          id: user._id,
-          firstName: user.firstName,
-          lastName: user.lastName,
-          email: user.email,
-        },
-      });
+    setSessionCookie(res, user);
+    return res.status(200).json({ success: true, message: 'Account verified successfully.', user: toPublicUser(user) });
   } catch (err) {
     next(err);
   }
 }
 
-/** Lets the citizen request a fresh OTP if the first one expired or was lost. */
+/** Sends a fresh registration OTP, subject to the resend cooldown. */
 export async function resendRegistrationOtp(req, res, next) {
   try {
     const { email } = req.body;
@@ -192,12 +170,7 @@ export async function resendRegistrationOtp(req, res, next) {
   }
 }
 
-/**
- * Email + password login. Per the product requirement: an email that
- * isn't registered at all is told to register first; a registered-but-
- * unverified account is sent back into the OTP flow instead of being
- * allowed to log in; only a verified account gets a session.
- */
+/** Email + password login. Unverified accounts are sent back into the OTP flow. */
 export async function loginWithPassword(req, res, next) {
   try {
     const { email, password } = req.body;
@@ -225,8 +198,6 @@ export async function loginWithPassword(req, res, next) {
     }
 
     if (!user.isVerified) {
-      // Re-send an OTP so the citizen can pick up verification right
-      // where they left off, instead of hitting a dead end.
       await issueAndSendOtp(user);
       return res.status(403).json({
         success: false,
@@ -243,13 +214,7 @@ export async function loginWithPassword(req, res, next) {
   }
 }
 
-/**
- * Google Sign-In login. The ID token is verified the same way as during
- * registration. A Google account that was never registered is reported
- * as such (rather than silently auto-creating one) so the frontend can
- * send the person into the registration flow with their profile
- * pre-filled.
- */
+/** Google Sign-In. An unknown Google account is reported (with its profile) so the client can prefill registration. */
 export async function loginWithGoogle(req, res, next) {
   try {
     const googleProfile = await verifyGoogleIdToken(req.body.googleIdToken);
@@ -284,9 +249,8 @@ export async function loginWithGoogle(req, res, next) {
   }
 }
 
-/** Returns the currently logged-in user, for the frontend to check session state on load. */
-export async function getCurrentUser(req, res) {
-  // req.user is attached by the requireAuth middleware
+/** Current session user (req.user is set by requireAuth). */
+export function getCurrentUser(req, res) {
   return res.status(200).json({ success: true, user: toPublicUser(req.user) });
 }
 
@@ -294,17 +258,11 @@ export function logout(_req, res) {
   res.clearCookie('session').status(200).json({ success: true, message: 'Logged out.' });
 }
 
+/** Saves the profile details (all required; checked by completeProfileValidationRules). */
 export async function completeProfile(req, res, next) {
   try {
     const user = req.user;
     const { firstName, lastName, dob, contactNo, streetAddress } = req.body;
-
-    if (!firstName || !lastName || !dob || !contactNo || !streetAddress) {
-      return res.status(400).json({
-        success: false,
-        message: 'Please complete all profile details before continuing.',
-      });
-    }
 
     user.firstName = String(firstName).trim();
     user.lastName = String(lastName).trim();
@@ -347,7 +305,7 @@ function toPublicUser(user) {
   };
 }
 
-/** Shared helper: replace any existing OTP for this user with a fresh one and email it. */
+/** Replaces any pending OTP for this user with a fresh one and emails it to the account address. */
 async function issueAndSendOtp(user) {
   await Otp.deleteMany({ user: user._id, purpose: 'REGISTER' });
 
@@ -363,12 +321,7 @@ async function issueAndSendOtp(user) {
     expiresAt,
   });
 
-  const displayName = user.firstName || 'there';
-
-  // Always sent to user.email - the address already verified as either
-  // the signed-in Google account or the one stored at registration -
-  // never to a value taken fresh from the request.
-  await sendOtpEmail({ to: user.email, firstName: displayName, otp });
+  await sendOtpEmail({ to: user.email, firstName: user.firstName || 'there', otp });
 }
 
 function maskEmail(email) {

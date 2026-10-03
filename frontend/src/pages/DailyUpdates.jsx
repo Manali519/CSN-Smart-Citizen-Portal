@@ -3,13 +3,16 @@ import { useSearchParams } from 'react-router-dom';
 import './DailyUpdates.css';
 
 const WATER_SCHEDULE = [
-  { zone: 'Zone 1 (Old City)', areas: 'Paithan Gate, Delhi Gate, Bhadkal', time: '06:00 AM – 09:00 AM', status: 'On Schedule', pressure: 'Normal' },
-  { zone: 'Zone 2 (CIDCO)', areas: 'N-1, N-2, N-3, N-4 Sectors', time: '08:30 AM – 11:30 AM', status: 'On Schedule', pressure: 'High' },
-  { zone: 'Zone 3 (Garkheda)', areas: 'Osmanpura, Jawahar Colony, Satara', time: '12:00 PM – 03:00 PM', status: 'On Schedule', pressure: 'Normal' },
-  { zone: 'Zone 4 (Harsul)', areas: 'Harsul T-Point, Chikalthana, MIDC', time: '04:00 PM – 07:00 PM', status: 'Maintenance', pressure: 'Low' },
-  { zone: 'Zone 5 (Cantonment)', areas: 'Station Area, Begumpura, Padampura', time: '06:30 PM – 09:30 PM', status: 'On Schedule', pressure: 'Normal' },
+  { zone: 'Zone A-1 (Town Hall)', areas: 'Town Hall, Makai Gate, Killa Arrak', time: '06:00 AM – 09:00 AM', status: 'Maintenance', pressure: 'Normal' },
+{ zone: 'Zone B-5 (CIDCO N-6)', areas: 'N-6 Sector, Sambhaji Nagar, Avishkar Colony', time: '07:30 AM – 10:30 AM', status: 'On Schedule', pressure: 'High' },
+{ zone: 'Zone C-3 (Central Naka)', areas: 'Central Naka, Jalna Road, Mondha', time: '09:00 AM – 12:00 PM', status: 'On Schedule', pressure: 'Normal' },
+{ zone: 'Zone D-9 (Krantichowk)', areas: 'Krantichowk, Tilak Nagar, Nirala Bazar', time: '11:00 AM – 02:00 PM', status: 'Maintenance', pressure: 'Normal' },
+{ zone: 'Zone E-6 (CIDCO N-6)', areas: 'N-6 Sectors B & C, CIDCO Shopping Center', time: '01:00 PM – 04:00 PM', status: 'On Schedule', pressure: 'Normal' },
+{ zone: 'Zone F-7 (Jawahar Colony)', areas: 'Jawahar Colony, Shanoorwadi, Mahesh Nagar', time: '03:00 PM – 06:00 PM', status: 'On Schedule', pressure: 'Normal' },
+{ zone: 'Zone G-2 (Mondha Naka)', areas: 'Mondha Naka, Sille Khana, Kranti Nagar', time: '04:30 PM – 07:30 PM', status: 'Maintenance', pressure: 'Low' },
+{ zone: 'Zone H-4 (Saubhagya Mangalkaryalya)', areas: 'Saubhagya Mangalkaryalya Parisar, Shahnoor Miya Dargah Road', time: '06:00 PM – 09:00 PM', status: 'On Schedule', pressure: 'Normal' },
+{ zone: 'Zone I-8 (Satara Parisar)', areas: 'Satara Parisar, Alok Nagar, Devendra Nagar', time: '07:30 PM – 10:30 PM', status: 'On Schedule', pressure: 'High' },
 ];
-
 const ROAD_WORKS = [
   {
     title: 'Kranti Chowk to Baba Petrol Pump Road Resurfacing',
@@ -17,7 +20,7 @@ const ROAD_WORKS = [
     type: 'Asphalt Layering & Pothole Patching',
     status: 'In Progress (70%)',
     traffic: 'Single lane open; slow movement expected during peak hours',
-    completion: 'Target: 28 Sep 2026',
+   
   },
   {
     title: 'Seven Hills to Cannaught Underground Drainage Pipe Installation',
@@ -25,7 +28,7 @@ const ROAD_WORKS = [
     type: 'Stormwater Drainage Upgrade',
     status: 'In Progress (45%)',
     traffic: 'Diversion active via N-2 Internal Link Road',
-    completion: 'Target: 02 Oct 2026',
+    
   },
   {
     title: 'Jalna Road Smart LED Streetlight Pole Upgrades',
@@ -33,7 +36,7 @@ const ROAD_WORKS = [
     type: 'Electrical Infrastructure',
     status: 'Night Shift Work (9 PM – 5 AM)',
     traffic: 'No daytime road blockage; night lane diversion',
-    completion: 'Target: 26 Sep 2026',
+    
   },
 ];
 
@@ -121,7 +124,7 @@ export default function DailyUpdates() {
         {activeTab === 'water' && (
           <section className="updates-section">
             <div className="updates-section-header">
-              <h2>Area-Wise Water Supply Timings</h2>
+              <h2>Area Wise Water Supply Timings</h2>
               <p>Daily ward distribution schedule from Jayakwadi / Harsul filtration plants.</p>
             </div>
 
@@ -189,9 +192,7 @@ export default function DailyUpdates() {
                   <div className="updates-card-detail">
                     <strong>Traffic Advisory:</strong> {work.traffic}
                   </div>
-                  <div className="updates-card-footer">
-                    <span>⏳ {work.completion}</span>
-                  </div>
+                 
                 </div>
               ))}
             </div>

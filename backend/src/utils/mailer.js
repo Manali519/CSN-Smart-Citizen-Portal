@@ -72,12 +72,10 @@ can safely ignore this email.
       text,
       html,
     });
-    console.log(`[mailer] ✅ Verification OTP [${otp}] emailed to ${to}`);
   } catch (err) {
-    console.warn(`[mailer] ⚠️ SMTP notice (${err.message}). Local DEV OTP for ${to} is: [${otp}]`);
-    if (env.nodeEnv === 'production') {
-      throw err;
-    }
+    if (env.nodeEnv === 'production') throw err;
+    // Development only: lets you finish sign-up without working SMTP. OTPs are never logged in production.
+    console.warn(`[mailer] SMTP failed (${err.message}). Development OTP for ${to}: ${otp}`);
   }
 }
 

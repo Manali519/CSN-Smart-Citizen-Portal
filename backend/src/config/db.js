@@ -1,19 +1,15 @@
 import mongoose from 'mongoose';
 import { env } from './env.js';
 
-// Establishes connection to MongoDB Atlas using the URI in .env
-export const connectDB = async () => {
-  try {
-    const conn = await mongoose.connect(env.mongodbUri, {
-      dbName: 'smart_city',
-      serverSelectionTimeoutMS: 6000,
-    });
+export const DB_OPTIONS = { dbName: 'smart_city', serverSelectionTimeoutMS: 6000 };
 
-    console.log(`MongoDB Atlas connected: ${conn.connection.host}`);
-  } catch (error) {
-    console.error(`MongoDB connection notice: ${error.message}`);
-    if (env.nodeEnv === 'production') {
-      process.exit(1);
-    }
+/** Connects to MongoDB Atlas. Production refuses to start without a database; development keeps serving. */
+export async function connectDB() {
+  try {
+    const conn = await mongoose.connect(env.mongodbUri, DB_OPTIONS);
+    console.log(`[db] MongoDB connected: ${conn.connection.host}`);
+  } catch (err) {
+    if (env.nodeEnv === 'production') throw err;
+    console.error(`[db] MongoDB connection failed: ${err.message}`);
   }
-};
+}

@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useGoogleSignIn } from '../hooks/useGoogleSignIn.js';
 import { useAuth } from '../context/AuthContext.jsx';
 import {
@@ -14,7 +14,11 @@ const RESEND_COOLDOWN_SECONDS = 60;
 
 export default function CitizenLogin() {
   const navigate = useNavigate();
+  const location = useLocation();
   const { refreshUser } = useAuth();
+  // Return to the page that required login (internal paths only, never an external URL).
+  const from = location.state?.from;
+  const afterLogin = typeof from === 'string' && from.startsWith('/') && !from.startsWith('//') ? from : '/dashboard';
 
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -61,7 +65,7 @@ export default function CitizenLogin() {
     try {
       await loginWithPassword({ email, password });
       await refreshUser();
-      navigate('/dashboard');
+      navigate(afterLogin, { replace: true });
     } catch (err) {
       if (err.code === 'NOT_REGISTERED') {
         setNotRegistered(true);
@@ -85,7 +89,7 @@ export default function CitizenLogin() {
     try {
       await loginWithGoogle({ googleIdToken: credential });
       await refreshUser();
-      navigate('/dashboard');
+      navigate(afterLogin, { replace: true });
     } catch (err) {
       if (err.code === 'NOT_REGISTERED') {
         setNotRegistered(true);
@@ -109,7 +113,7 @@ export default function CitizenLogin() {
     try {
       await verifyRegistrationOtp({ email: otpEmail, otp });
       await refreshUser();
-      navigate('/dashboard');
+      navigate(afterLogin, { replace: true });
     } catch (err) {
       setOtpError(err.message);
     } finally {

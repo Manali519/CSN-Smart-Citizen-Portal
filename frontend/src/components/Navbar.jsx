@@ -4,7 +4,7 @@ import { useAuth } from '../context/AuthContext.jsx';
 import logo from './logo.png';
 import './Navbar.css';
 
-export default function Navbar() {
+export default function Navbar({ minimal = false }) {
   const [open, setOpen] = useState(false);
   const [servicesOpen, setServicesOpen] = useState(false);
   const { user, isLoggedIn, logout } = useAuth();
@@ -56,7 +56,7 @@ export default function Navbar() {
           <img src={logo} alt="Smart City Logo" className="brand-logo" />
           <span className="brand-text">
             <strong>Chh. Sambhajinagar</strong>
-            <small>Smart City Portal</small>
+            <small>Smart Citizen Portal</small>
           </span>
         </NavLink>
 
@@ -114,8 +114,8 @@ export default function Navbar() {
               </div>
             </li>
 
-            {/* When logged in: Register a complaint & Services button right beside it */}
-            {isLoggedIn ? (
+            {/* Citizen-only actions: rendered for logged-in citizens (never in the minimal admin-login variant) */}
+            {!minimal && isLoggedIn && (
               <>
                 <li>
                   <NavLink
@@ -139,7 +139,7 @@ export default function Navbar() {
                       <span className="service-nav-icon">💧</span>
                       <div>
                         <strong>Water Tanker</strong>
-                        <small>Zomato-style booking with live GPS</small>
+                        <small>Book 1000L - 20000L online</small>
                       </div>
                     </NavLink>
                     <NavLink to="/services/garbage-van" onClick={close} className="nav-dropdown-link nav-service-item">
@@ -152,60 +152,35 @@ export default function Navbar() {
                   </div>
                 </li>
               </>
-            ) : (
-              /* When not logged in, also provide quick access to Services */
-              <li className="nav-dropdown-item nav-services-dropdown">
-                <button
-                  type="button"
-                  className="nav-dropdown-btn nav-services-btn"
-                  onClick={() => setServicesOpen((v) => !v)}
-                >
-                  ⚡ Services <span className="nav-dropdown-arrow">▾</span>
-                </button>
-                <div className={`nav-dropdown-content ${servicesOpen ? 'force-open' : ''}`}>
-                  <NavLink to="/services/water-tanker" onClick={close} className="nav-dropdown-link nav-service-item">
-                    <span className="service-nav-icon">💧</span>
-                    <div>
-                      <strong>Water Tanker</strong>
-                      <small>Book 1000L - 20000L online</small>
-                    </div>
-                  </NavLink>
-                  <NavLink to="/services/garbage-van" onClick={close} className="nav-dropdown-link nav-service-item">
-                    <span className="service-nav-icon">🚛</span>
-                    <div>
-                      <strong>Garbage Vans</strong>
-                      <small>Schedule municipal waste pickup</small>
-                    </div>
-                  </NavLink>
-                </div>
-              </li>
             )}
           </ul>
 
-          <div className="nav-auth">
-            {isLoggedIn ? (
-              <div className="nav-user-cluster">
-                <NavLink to="/dashboard" className="btn nav-btn-user" onClick={close}>
-                  <span className="user-avatar-circle">
-                    {(user?.firstName || 'C')[0].toUpperCase()}
-                  </span>
-                  <span>{user?.firstName ? `${user.firstName}` : 'Dashboard'}</span>
-                </NavLink>
-                <button type="button" className="btn nav-btn-logout" onClick={handleLogout}>
-                  Log Out
-                </button>
-              </div>
-            ) : (
-              <>
-                <NavLink to="/citizen-login" className="btn nav-btn-login" onClick={close}>
-                  Citizen Login
-                </NavLink>
-                <NavLink to="/officer-login" className="btn nav-btn-officer" onClick={close}>
-                  Officer Login
-                </NavLink>
-              </>
-            )}
-          </div>
+          {!minimal && (
+            <div className="nav-auth">
+              {isLoggedIn ? (
+                <div className="nav-user-cluster">
+                  <NavLink to="/dashboard" className="btn nav-btn-user" onClick={close}>
+                    <span className="user-avatar-circle">
+                      {(user?.firstName || 'C')[0].toUpperCase()}
+                    </span>
+                    <span>{user?.firstName ? `${user.firstName}` : 'Dashboard'}</span>
+                  </NavLink>
+                  <button type="button" className="btn nav-btn-logout" onClick={handleLogout}>
+                    Log Out
+                  </button>
+                </div>
+              ) : (
+                <>
+                  <NavLink to="/citizen-login" className="btn nav-btn-login" onClick={close}>
+                    Citizen Login
+                  </NavLink>
+                  <NavLink to="/officer-login" className="btn nav-btn-officer" onClick={close}>
+                    Officer Login
+                  </NavLink>
+                </>
+              )}
+            </div>
+          )}
         </nav>
       </div>
     </header>

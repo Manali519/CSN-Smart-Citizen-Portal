@@ -34,14 +34,36 @@ const ICONS = {
       <rect x="10" y="8" width="5" height="13" rx="1" />
       <rect x="17" y="3" width="5" height="18" rx="1" />
     </svg>
-  )
+  ),
+  updates: (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7">
+      <path d="M6 8a6 6 0 1 1 12 0c0 7 3 8 3 8H3s3-1 3-8z" strokeLinejoin="round" />
+      <path d="M10 20a2 2 0 0 0 4 0" strokeLinecap="round" />
+    </svg>
+  ),
+  heatmap: (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7">
+      <path d="M12 21s-7-6.2-7-11.5a7 7 0 0 1 14 0C19 14.8 12 21 12 21z" strokeLinejoin="round" />
+      <circle cx="12" cy="9.5" r="2.5" />
+    </svg>
+  ),
 };
+
+// Complaint and water cards ask visitors to log in first (RequireCitizen); the rest are open to everyone.
 const SERVICES = [
+  {
+    icon: 'city',
+    title: 'Know Your City',
+    desc: 'Ward maps, zonal offices, and city facilities at a glance.',
+    to: '/know-your-city',
+  },
+  
+
   {
     icon: 'dashboard',
     title: 'City Analytical Dashboard',
-    desc: 'Live complaint metrics, resolution speeds, and ward statistics.',
-    to: '/dashboard',
+    desc: 'Live complaint metrics, resolution counts, and service bookings.',
+    to: '/city-analytics',
   },
   {
     icon: 'updates',
@@ -52,9 +74,9 @@ const SERVICES = [
   {
     icon: 'heatmap',
     title: 'Live Heatmap',
-    desc: 'Identify hotspot areas.',
+    desc: 'See complaint hotspots and their status across the city.',
     to: '/live-heatmap',
-  }
+  },
 ];
 
 export default function ServiceGrid() {

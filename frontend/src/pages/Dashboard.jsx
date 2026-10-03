@@ -2,9 +2,10 @@ import React, { useEffect, useState, useCallback, useMemo } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { getCurrentUser, logout, completeProfile } from '../api/auth.js';
 import { fetchMyComplaints, submitComplaintFeedback } from '../services/complaints/index.js';
-import { fetchMyRequests, createServiceRequest } from '../api/requests.js';
+import { fetchMyRequests } from '../api/requests.js';
 import { fetchMyTankerBookings, fetchMyGarbageBookings } from '../services/bookings/index.js';
 import { submitServiceRating } from '../services/officer/index.js';
+import { assetUrl } from '../api/client.js';
 import ServiceRating from '../components/ServiceRating.jsx';
 import './Dashboard.css';
 
@@ -14,9 +15,19 @@ const COMPLAINT_TABS = [
   { key: 'solved', label: 'Solved' },
 ];
 
-const TANKER_OPTIONS = [5000, 10000, 20000];
-const TANKER_SOURCES = ['Municipal Supply', 'Certified Borewell', 'Tanker Yard'];
-const PAYMENT_METHODS = ['UPI', 'Cards', 'NetBanking'];
+const SOLVED_STATUSES = ['Resolved', 'Closed'];
+
+// Citizens see "Under Verification" rather than the internal "Suspected Fake" label.
+const COMPLAINT_STATUS_UI = {
+  'Pending Review': { label: 'Pending Review', className: 'status-pending' },
+  'Suspected Fake': { label: 'Under Verification', className: 'status-pending' },
+  Rejected: { label: 'Rejected', className: 'status-cancelled' },
+  'In Progress': { label: 'In Progress', className: 'status-in-progress' },
+  Resolved: { label: 'Resolved', className: 'status-resolved' },
+  Closed: { label: 'Closed', className: 'status-resolved' },
+  Reopened: { label: 'Reopened', className: 'status-in-progress' },
+};
+
 
 const EMPTY_PROFILE_FORM = {
   firstName: '',
@@ -42,34 +53,10 @@ export default function Dashboard() {
   const [complaints, setComplaints] = useState([]);
   const [complaintsLoading, setComplaintsLoading] = useState(true);
   const [tab, setTab] = useState('all');
+  const [feedbackError, setFeedbackError] = useState('');
 
   const [requests, setRequests] = useState([]);
   const [requestsLoading, setRequestsLoading] = useState(true);
-
-  const [reqForm, setReqForm] = useState({ type: 'water_tanker', address: '', preferredDate: '', notes: '' });
-  const [reqSubmitting, setReqSubmitting] = useState(false);
-  const [reqError, setReqError] = useState('');
-  const [reqNotice, setReqNotice] = useState('');
-
-  const [selectedQuantity, setSelectedQuantity] = useState(10000);
-  const [selectedSource, setSelectedSource] = useState('Municipal Supply');
-  const [paymentMethod, setPaymentMethod] = useState('UPI');
-  const [etaMinutes, setEtaMinutes] = useState(45);
-
-  const prices = useMemo(() => ({
-    5000: 1499,
-    10000: 2799,
-    20000: 5299,
-  }), []);
-
-  const bookingSummary = useMemo(() => {
-    const basePrice = prices[selectedQuantity] || prices[10000];
-    const distanceFee = selectedQuantity >= 20000 ? 799 : 450;
-    const serviceFee = 199;
-    const taxes = Math.round((basePrice + distanceFee + serviceFee) * 0.05);
-    const total = basePrice + distanceFee + serviceFee + taxes;
-    return { basePrice, distanceFee, serviceFee, taxes, total };
-  }, [prices, selectedQuantity]);
 
   useEffect(() => {
     let cancelled = false;
@@ -85,7 +72,6 @@ export default function Dashboard() {
           contactNo: currentUser.contactNo || '',
           streetAddress: currentUser.streetAddress || '',
         });
-        setReqForm((f) => ({ ...f, address: currentUser.streetAddress || '' }));
         const profileIncomplete = !currentUser.firstName || !currentUser.lastName || !currentUser.dob || !currentUser.contactNo || !currentUser.streetAddress;
         setIsProfileOpen(profileIncomplete);
         if (profileIncomplete) {
@@ -101,13 +87,6 @@ export default function Dashboard() {
     return () => { cancelled = true; };
   }, [navigate]);
 
-  useEffect(() => {
-    const timer = setInterval(() => {
-      setEtaMinutes((current) => (current > 1 ? current - 1 : 1));
-    }, 60000);
-    return () => clearInterval(timer);
-  }, []);
-
   const loadComplaints = useCallback(() => {
     if (!user) return;
     setComplaintsLoading(true);
@@ -118,7 +97,6 @@ export default function Dashboard() {
   }, [user]);
 
   const [tankerBookings, setTankerBookings] = useState([]);
-  const [tankerLoading, setTankerLoading] = useState(false);
   const [garbageBookings, setGarbageBookings] = useState([]);
 
   const loadRequests = useCallback(() => {
@@ -133,11 +111,9 @@ export default function Dashboard() {
       .then((res) => setGarbageBookings(res.bookings || []))
       .catch(() => setGarbageBookings([]));
 
-    setTankerLoading(true);
     fetchMyTankerBookings()
       .then((res) => setTankerBookings(res.bookings || []))
-      .catch(() => setTankerBookings([]))
-      .finally(() => setTankerLoading(false));
+      .catch(() => setTankerBookings([]));
   }, [user]);
 
   const handleServiceRatingSubmit = async ({ requestId, type, rating, review }) => {
@@ -158,10 +134,13 @@ export default function Dashboard() {
   useEffect(() => { loadComplaints(); }, [loadComplaints]);
   useEffect(() => { loadRequests(); }, [loadRequests]);
 
+  // Resolved by the officer and not yet rated: shown as notifications at the top of the dashboard.
+  const complaintsToRate = complaints.filter((c) => c.status === 'Resolved' && !c.userFeedback?.rating);
+
   const filteredComplaints = complaints.filter((c) => {
     if (tab === 'all') return true;
-    if (tab === 'solved') return c.status === 'resolved';
-    return c.status !== 'resolved';
+    const solved = SOLVED_STATUSES.includes(c.status);
+    return tab === 'solved' ? solved : !solved;
   });
 
   const profileIncomplete = !user || !user.firstName || !user.lastName || !user.dob || !user.contactNo || !user.streetAddress;
@@ -188,7 +167,6 @@ export default function Dashboard() {
         streetAddress: res.user.streetAddress || '',
       });
       setProfileNotice(res.message || 'Profile saved successfully.');
-      setReqForm((f) => ({ ...f, address: res.user.streetAddress || f.address }));
       setIsProfileOpen(false);
       setActiveNav('overview');
     } catch (err) {
@@ -198,36 +176,13 @@ export default function Dashboard() {
     }
   }
 
-  async function handleRequestSubmit(e) {
-    e.preventDefault();
-    setReqError('');
-    setReqNotice('');
-    setReqSubmitting(true);
-    try {
-      const res = await createServiceRequest({
-        ...reqForm,
-        type: 'water_tanker',
-        address: user?.streetAddress || reqForm.address || '',
-        preferredDate: new Date(Date.now() + etaMinutes * 60000).toISOString(),
-        notes: `Water quantity: ${selectedQuantity}L | Source: ${selectedSource} | Payment: ${paymentMethod}`,
-      });
-      setReqNotice(`Water tanker booked — reference ${res.request.referenceNo}.`);
-      setReqForm((f) => ({ ...f, notes: '' }));
-      loadRequests();
-      setActiveNav('overview');
-    } catch (err) {
-      setReqError(err.message);
-    } finally {
-      setReqSubmitting(false);
-    }
-  }
-
   async function handleFeedback(complaintId, rating) {
+    setFeedbackError('');
     try {
       await submitComplaintFeedback(complaintId, { rating });
       loadComplaints();
-    } catch {
-      // no-op
+    } catch (err) {
+      setFeedbackError(err.message || 'Could not save your rating. Please try again.');
     }
   }
 
@@ -287,13 +242,6 @@ export default function Dashboard() {
             >
               🚛 Garbage Vans
             </Link>
-            <button
-              type="button"
-              className={`nav-button ${activeNav === 'my-bookings' ? 'active' : ''}`}
-              onClick={() => { setActiveNav('my-bookings'); setIsProfileOpen(false); }}
-            >
-              📍 Active Bookings ({tankerBookings.length})
-            </button>
           </nav>
 
           <button type="button" className="btn btn-outline sidebar-logout" onClick={handleLogout}>Log out</button>
@@ -308,7 +256,7 @@ export default function Dashboard() {
           </div>
 
           {hasAcceptedRequest && (
-            <div className="citizen-mock-notification-alert" role="alert">
+            <div className="citizen-notification" role="alert">
               <span className="notif-alert-bell">🔔</span>
               <div className="notif-alert-content">
                 <strong>Officer Notification Alert</strong>
@@ -316,6 +264,42 @@ export default function Dashboard() {
               </div>
             </div>
           )}
+
+          {complaintsToRate.map((c) => (
+            <div key={c._id} className="citizen-notification complaint-resolved-alert" role="status">
+              <span className="notif-alert-bell" aria-hidden="true">🔔</span>
+              <div className="notif-alert-content">
+                <strong>Complaint {c.complaintCode} has been resolved</strong>
+                <p>
+                  {c.categoryLabel}: {c.resolution?.solutionGiven || 'The officer has marked your complaint as complete.'}
+                </p>
+                {c.resolution?.afterPhotos?.length > 0 && (
+                  <div className="notif-proof-row">
+                    {c.resolution.afterPhotos.map((url) => (
+                      <a key={url} href={assetUrl(url)} target="_blank" rel="noreferrer">
+                        <img src={assetUrl(url)} alt="Proof of the completed work" className="notif-proof" />
+                      </a>
+                    ))}
+                  </div>
+                )}
+                <div className="feedback-row">
+                  <span>Rate the resolution:</span>
+                  {[1, 2, 3, 4, 5].map((n) => (
+                    <button
+                      key={n}
+                      type="button"
+                      className="star-btn"
+                      aria-label={`Rate ${n} out of 5`}
+                      onClick={() => handleFeedback(c._id, n)}
+                    >
+                      &#9733;
+                    </button>
+                  ))}
+                </div>
+              </div>
+            </div>
+          ))}
+          {feedbackError && <p className="form-error" role="alert">{feedbackError}</p>}
 
           {showProfileCard && (
             <div className="dashboard-card profile-card">
@@ -421,25 +405,27 @@ export default function Dashboard() {
                       {filteredComplaints.map((c) => (
                         <li key={c._id} className="complaint-item">
                           <div className="complaint-top">
-                            <span className={`status-pill status-${c.status}`}>{formatStatus(c.status)}</span>
-                            <span className="complaint-ref">{c.referenceNo}</span>
+                            <span className={`status-pill ${COMPLAINT_STATUS_UI[c.status]?.className || 'status-pending'}`}>
+                              {COMPLAINT_STATUS_UI[c.status]?.label || c.status}
+                            </span>
+                            <span className="complaint-ref">{c.complaintCode}</span>
                           </div>
-                          <h3>{c.category}</h3>
+                          <h3>{c.categoryLabel}</h3>
                           <p>{c.description}</p>
-                          <p className="complaint-location">{c.location}</p>
-
-                          {c.status === 'resolved' && !c.feedback?.rating && (
-                            <div className="feedback-row">
-                              <span>Rate the resolution:</span>
-                              {[1, 2, 3, 4, 5].map((n) => (
-                                <button key={n} type="button" className="star-btn" onClick={() => handleFeedback(c._id, n)}>
-                                  &#9733;
-                                </button>
-                              ))}
-                            </div>
+                          {Array.isArray(c.location?.coordinates) && (
+                            <p className="complaint-location">
+                              📍 {c.location.coordinates[1].toFixed(5)}, {c.location.coordinates[0].toFixed(5)}
+                            </p>
                           )}
-                          {c.feedback?.rating && (
-                            <p className="feedback-given">You rated this {c.feedback.rating}/5.</p>
+
+                          {c.resolution?.solutionGiven && (
+                            <p className="complaint-location">Officer: {c.resolution.solutionGiven}</p>
+                          )}
+                          {c.status === 'Resolved' && !c.userFeedback?.rating && (
+                            <p className="complaint-location">Resolved. Please rate it in the notification above.</p>
+                          )}
+                          {c.userFeedback?.rating && (
+                            <p className="feedback-given">You rated this {c.userFeedback.rating}/5.</p>
                           )}
                         </li>
                       ))}
@@ -451,9 +437,7 @@ export default function Dashboard() {
                 <div className="dashboard-card" style={{ marginTop: '20px' }}>
                   <div className="dashboard-card-header">
                     <h2>Civic Service Requests &amp; Department Orders</h2>
-                    <span className="status-pill status-in-progress">
-                      {requests.length + garbageBookings.length} Active
-                    </span>
+                    
                   </div>
 
                   {requestsLoading ? (
@@ -489,7 +473,7 @@ export default function Dashboard() {
                             <p className="citizen-req-address">📍 {r.address}</p>
                             {r.notes && <p className="citizen-req-notes">📝 {r.notes}</p>}
 
-                            {/* Requirement 3: Reveal rating interface component on Completed status */}
+                            {/* Rating is offered once the request is completed */}
                             {isCompleted && (
                               <ServiceRating
                                 requestId={r._id}
@@ -529,7 +513,7 @@ export default function Dashboard() {
                               📍 {b.pickupAddress?.streetAddress || b.pickupAddress?.fullName || 'Registered Address'}
                             </p>
 
-                            {/* Requirement 3: Reveal rating interface component on Completed status */}
+                            {/* Rating is offered once the request is completed */}
                             {isCompleted && (
                               <ServiceRating
                                 requestId={b._id}
@@ -564,7 +548,7 @@ export default function Dashboard() {
                     <Link to="/services/water-tanker" className="quick-action-item" style={{ background: '#F0F9FF', borderColor: '#BAE6FD' }}>
                       <span className="quick-action-icon">💧</span>
                       <div>
-                        <strong>Water Tanker (Zomato-Style)</strong>
+                        <strong>Water Tanker Booking</strong>
                         <small>Select 1000L-20000L, source, pay cash/UPI &amp; track GPS</small>
                       </div>
                     </Link>
@@ -616,137 +600,12 @@ export default function Dashboard() {
                             <div style={{ fontSize: '0.78rem', color: '#64748B', marginBottom: '8px' }}>
                               Driver: <strong>{b.driver?.name}</strong> ({b.driver?.vehicleNo}) • Total: <strong>₹{b.pricing?.totalAmount}</strong> ({b.payment?.method?.toUpperCase()})
                             </div>
-
-                            <Link
-                              to={`/track-tanker/${b.bookingId}`}
-                              className="btn btn-primary"
-                              style={{
-                                display: 'block',
-                                textAlign: 'center',
-                                textDecoration: 'none',
-                                padding: '8px 14px',
-                                fontSize: '0.84rem',
-                                fontWeight: 750,
-                                background: 'linear-gradient(135deg, #0284C7 0%, #0369A1 100%)',
-                                borderRadius: '8px',
-                              }}
-                            >
-                              🚀 Track Tanker Live (Zomato GPS) &rarr;
-                            </Link>
                           </div>
                         ))}
                       </div>
                     </div>
                   )}
 
-                  <div className="tanker-card">
-                    <div className="tanker-header-row">
-                      <div>
-                        <p className="tanker-kicker">Water delivery</p>
-                        <h3>Book Your Tanker</h3>
-                      </div>
-                      <span className="tanker-badge">Verified</span>
-                    </div>
-
-                    <div className="tanker-section">
-                      <div className="section-label-row">
-                        <span className="section-label">Water quantity</span>
-                        <span className="section-detail">{selectedQuantity.toLocaleString()} L</span>
-                      </div>
-                      <div className="stepper-group">
-                        {TANKER_OPTIONS.map((amount) => (
-                          <button
-                            key={amount}
-                            type="button"
-                            className={`quantity-chip ${selectedQuantity === amount ? 'selected' : ''}`}
-                            onClick={() => setSelectedQuantity(amount)}
-                          >
-                            {amount.toLocaleString()}L
-                          </button>
-                        ))}
-                      </div>
-                    </div>
-
-                    <div className="tanker-grid">
-                      <div className="info-box">
-                        <span className="info-label">ETA</span>
-                        <strong>Arriving in {etaMinutes} mins</strong>
-                      </div>
-                      <div className="info-box">
-                        <span className="info-label">Source</span>
-                        <strong>{selectedSource}</strong>
-                      </div>
-                    </div>
-
-                    <div className="tanker-section">
-                      <div className="section-label-row">
-                        <span className="section-label">Verified source</span>
-                        <span className="section-detail">{selectedSource}</span>
-                      </div>
-                      <div className="source-selector">
-                        {TANKER_SOURCES.map((source) => (
-                          <button
-                            key={source}
-                            type="button"
-                            className={`source-pill ${selectedSource === source ? 'active' : ''}`}
-                            onClick={() => setSelectedSource(source)}
-                          >
-                            {source}
-                          </button>
-                        ))}
-                      </div>
-                    </div>
-
-                    <div className="tanker-section">
-                      <div className="section-label-row">
-                        <span className="section-label">Price details</span>
-                        <span className="section-detail">₹{bookingSummary.total}</span>
-                      </div>
-                      <div className="price-list">
-                        <div><span>Base price</span><strong>₹{bookingSummary.basePrice}</strong></div>
-                        <div><span>Distance & surge</span><strong>₹{bookingSummary.distanceFee}</strong></div>
-                        <div><span>Service fee</span><strong>₹{bookingSummary.serviceFee}</strong></div>
-                        <div><span>Taxes</span><strong>₹{bookingSummary.taxes}</strong></div>
-                      </div>
-                    </div>
-
-                    <div className="tanker-section">
-                      <div className="section-label-row">
-                        <span className="section-label">Payment</span>
-                      </div>
-                      <div className="payment-row">
-                        {PAYMENT_METHODS.map((method) => (
-                          <button
-                            key={method}
-                            type="button"
-                            className={`payment-pill ${paymentMethod === method ? 'selected' : ''}`}
-                            onClick={() => setPaymentMethod(method)}
-                          >
-                            {method}
-                          </button>
-                        ))}
-                      </div>
-                    </div>
-
-                    {reqNotice && <p className="notice" role="status">{reqNotice}</p>}
-                    {reqError && <p className="form-error" role="alert">{reqError}</p>}
-
-                    <div className="checkout-sheet">
-                      <div className="checkout-summary">
-                        <div>
-                          <span>Order total</span>
-                          <strong>₹{bookingSummary.total}</strong>
-                        </div>
-                        <div>
-                          <span>Delivery</span>
-                          <strong>{etaMinutes} mins</strong>
-                        </div>
-                      </div>
-                      <button type="button" className="btn btn-primary checkout-btn" onClick={handleRequestSubmit} disabled={reqSubmitting}>
-                        {reqSubmitting ? 'Booking...' : `Proceed to pay via ${paymentMethod}`}
-                      </button>
-                    </div>
-                  </div>
                 </div>
               </div>
             </div>
@@ -755,10 +614,6 @@ export default function Dashboard() {
       </div>
     </section>
   );
-}
-
-function formatStatus(status) {
-  return status.replace('-', ' ').replace(/\b\w/g, (c) => c.toUpperCase());
 }
 
 function renderServiceStatusPill(status = '') {

@@ -10,7 +10,7 @@ const FACILITIES = [
       </svg>
     ),
     title: 'Public Gardens & Parks',
-    count: '22',
+    count: '22+',
     desc: 'Public recreational parks and botanical gardens maintained by the Garden Dept.',
     keySpots: 'Siddharth Garden & Zoo, Himayat Bagh, Salim Ali Lake Bird Sanctuary, VIP Garden CIDCO',
   },
@@ -60,7 +60,7 @@ const FACILITIES = [
     ),
     title: 'Water Filtration Plants',
     count: '8',
-    desc: 'High-capacity water treatment plants & master balancing reservoirs.',
+    desc: 'High capacity water treatment plants & master balancing reservoirs.',
     keySpots: 'Nakshatrawadi WTP (Jayakwadi pipeline), Harsul Lake Filtration Plant, Pharanbaug ESR',
   },
   {
@@ -75,7 +75,7 @@ const FACILITIES = [
     title: 'Zonal Administration Offices',
     count: '10',
     desc: 'Decentralised civic centres for property tax, birth/death records, and certificates.',
-    keySpots: 'Zone 1 (Delhi Gate), Zone 2 (CIDCO N-1), Zone 3 (Osmanpura), Zone 4 (Harsul), Zone 5 (Station)',
+    keySpots: 'Town hall , Cidco N6 , Central Naka , Krantichowk , Jawahar Colony and more ',
   },
 ];
 
@@ -99,7 +99,7 @@ export default function CityFacilities() {
           <span className="facilities-tag">Civic Infrastructure</span>
           <h1>City Facilities &amp; Public Amenities</h1>
           <p className="facilities-subtitle">
-            Explore key public infrastructure maintained by the Chhatrapati Sambhajinagar Municipal Corporation across all 5 zones.
+            Explore key public infrastructure maintained by the Chhatrapati Sambhajinagar Municipal Corporation across all 10 zones.
           </p>
         </div>
       </section>

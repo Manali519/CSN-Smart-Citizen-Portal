@@ -22,7 +22,7 @@ const STATS = [
         <path d="M16 3.13a4 4 0 0 1 0 7.75" />
       </svg>
     ),
-    value: 'City-Wide',
+    value: 'City Wide',
     label: 'Citizens Served',
     desc: 'Empowered through digital governance',
   },
@@ -62,9 +62,9 @@ export default function AboutUs() {
             <span className="about-tag">About the Portal</span>
             <h2 id="about-heading">Built for the citizens of Chhatrapati Sambhajinagar</h2>
             <p>
-              The Chhatrapati Sambhajinagar Smart City Portal is an initiative by the
+              The Chhatrapati Sambhajinagar Smart Citizen Portal is an initiative by the
               Chhatrapati Sambhajinagar Municipal Corporation (CSMC) to bring all civic
-              services online — fast, transparent, and accessible.
+              services online : fast, transparent, and accessible.
             </p>
             <p>
               Whether you need to report a broken streetlight, track a water tanker request,
@@ -78,7 +78,7 @@ export default function AboutUs() {
               </li>
               <li>
                 <span className="highlight-dot" />
-                Real-time status updates via your account dashboard
+                Real time status updates via your account dashboard
               </li>
               <li>
                 <span className="highlight-dot" />

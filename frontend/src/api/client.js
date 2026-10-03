@@ -1,12 +1,14 @@
-export const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000';
+export const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || '';
 
-/** Small wrapper around fetch: sends/receives JSON, includes the session cookie, throws on non-2xx with the server's message. */
+export const assetUrl = (path) => `${API_BASE_URL}${path}`;
+
 export async function apiRequest(path, { method = 'POST', body } = {}) {
+  const isForm = body instanceof FormData;
   const res = await fetch(`${API_BASE_URL}${path}`, {
     method,
-    headers: { 'Content-Type': 'application/json' },
+    headers: isForm ? undefined : { 'Content-Type': 'application/json' },
     credentials: 'include', // send/receive the httpOnly session cookie
-    body: body ? JSON.stringify(body) : undefined,
+    body: isForm ? body : body ? JSON.stringify(body) : undefined,
   });
 
   let data;

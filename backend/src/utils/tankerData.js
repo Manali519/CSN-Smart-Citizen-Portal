@@ -175,32 +175,3 @@ export const DRIVER_FLEET = [
   },
 ];
 
-/**
- * Generates an interpolated GPS route with 20 road waypoints
- * between source reservoir and destination in Chhatrapati Sambhajinagar.
- */
-export function generateRouteWaypoints(start, end, stepsCount = 20) {
-  const waypoints = [];
-  
-  // Add some realistic road curvature jitter
-  for (let i = 0; i <= stepsCount; i++) {
-    const fraction = i / stepsCount;
-    // Base linear interpolation
-    let lat = start.lat + (end.lat - start.lat) * fraction;
-    let lng = start.lng + (end.lng - start.lng) * fraction;
-
-    // Add gentle sinusoidal road bends
-    if (i > 0 && i < stepsCount) {
-      const bend = Math.sin(fraction * Math.PI) * 0.004;
-      lat += (i % 2 === 0 ? bend : -bend * 0.5);
-      lng += (i % 3 === 0 ? bend * 0.7 : -bend * 0.3);
-    }
-
-    waypoints.push({
-      lat: Number(lat.toFixed(6)),
-      lng: Number(lng.toFixed(6)),
-    });
-  }
-
-  return waypoints;
-}

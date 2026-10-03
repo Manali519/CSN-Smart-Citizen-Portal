@@ -50,7 +50,7 @@ export default function CityTransportation() {
           <span className="transport-tag">City Mobility &amp; Transit</span>
           <h1>City Transportation &amp; Schedules</h1>
           <p className="transport-subtitle">
-            Comprehensive transit timetables for Smart City Buses, Express Trains, Domestic Flights, and Zone-Wise Auto-Rickshaw stands.
+            Comprehensive transit timetables for Smart City Buses, Express Trains, Domestic Flights, and Zone Wise Auto Rickshaw stands.
           </p>
         </div>
       </section>
@@ -88,7 +88,7 @@ export default function CityTransportation() {
           <section className="transport-section">
             <div className="transport-section-header">
               <h2>Smart City Bus Service Schedule</h2>
-              <p>CSMC &amp; MSRTC operated electric and low-floor transit buses connecting key city corridors.</p>
+              <p>CSMC &amp; MSRTC operated electric and low floor transit buses connecting key city corridors.</p>
             </div>
             <div className="transport-table-wrapper">
               <table className="transport-table">

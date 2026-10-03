@@ -10,8 +10,8 @@ const HERITAGE_SITES = [
     status: 'UNESCO World Heritage Site',
     statusType: 'unesco',
     img: '/assets/ellora-caves.jpg',
-    desc: 'World-famous 34 rock-cut caves carved between the 6th and 10th century CE across Buddhist, Hindu, and Jain traditions. Cave 16 (Kailasa Temple) is the largest monolithic rock excavation on Earth, carved top-down from a single volcanic basalt cliff.',
-    highlights: 'Monolithic architecture, 34 rock-cut cave temples, 30 km from city center',
+    desc: 'World famous 34 rock cut caves carved between the 6th and 10th century CE across Buddhist, Hindu, and Jain traditions. Cave 16 (Kailasa Temple) is the largest monolithic rock excavation on Earth, carved top-down from a single volcanic basalt cliff.',
+    highlights: 'Monolithic architecture, 34 rock cut cave temples, 30 km from city center',
   },
   {
     name: 'Bibi Ka Maqbara ("Taj of the Deccan")',
@@ -85,7 +85,7 @@ export default function CityHistory() {
             <div className="history-fact-card">
               <span className="hfact-icon">☀️</span>
               <span className="hfact-label">Climate Profile</span>
-              <strong>Hot Semi-Arid</strong>
+              <strong>Hot Semi Arid</strong>
               <p>Pleasant mild winters (10–28°C), monsoon Jun–Sep, summer Mar–Jun</p>
             </div>
           </div>
@@ -98,7 +98,7 @@ export default function CityHistory() {
           <div className="history-section-header">
             <span className="hsec-pill">World Heritage &amp; Monuments</span>
             <h2>Famous Historical &amp; Heritage Sites</h2>
-            <p>World-renowned architecture attracting millions of global travellers and historians.</p>
+            <p>World renowned architecture attracting millions of global travellers and historians.</p>
           </div>
 
           <div className="heritage-cards-grid">

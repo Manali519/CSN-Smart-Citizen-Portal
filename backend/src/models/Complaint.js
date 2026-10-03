@@ -1,88 +1,72 @@
 import mongoose from 'mongoose';
+import { CATEGORY_KEYS, DEPARTMENTS } from '../config/complaintCategories.js';
+
+export const COMPLAINT_STATUSES = [
+  'Pending Review', // passed all checks, routed to the department
+  'Suspected Fake', // failed a check, waiting in the admin queue
+  'Rejected', // admin rejected it
+  'In Progress', // officer working on it
+  'Resolved', // officer closed it, awaiting citizen response
+  'Closed', // citizen accepted the resolution
+  'Reopened', // citizen rejected the resolution
+];
+
+const COMPLAINT_FLAGS = [
+  'rate_limited', // over the daily limit
+  'ml_unavailable', // AI check could not run
+  'image_mismatch', // photo does not match the chosen department
+  'text_mismatch', // description does not match the chosen department
+  'low_confidence', // both matched, but the combined score is below the threshold
+  'duplicate_image', // same photo as an earlier complaint
+];
+
+/** Statuses an officer can still act on. */
+export const OFFICER_OPEN_STATUSES = ['Pending Review', 'In Progress', 'Reopened'];
 
 /**
  * Complaint
- * Single source of truth for a complaint's full lifecycle:
- * User raises -> routed to Department -> Officer receives -> Officer acts
- * (before/after photos + solution) -> Officer closes -> User accepts/
- * rejects with feedback & rating.
+ * Citizen raises (category + photo + description) -> automatic checks (location, geofence,
+ * rate limit, CLIP, duplicate) -> routed to a department or held for admin review ->
+ * officer acts -> citizen responds with feedback.
  */
 const complaintSchema = new mongoose.Schema(
   {
-    complaintCode: {
-      type: String,
-      required: true,
-      unique: true, // human-readable ID, e.g. SC-2026-00001
-    },
+    complaintCode: { type: String, required: true, unique: true }, // human-readable, e.g. CMP-8F2K91AB
 
-    // Who raised it
-    user: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: "User",
-      required: true,
-    },
+    user: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
 
-    // What & where
-    title: {
-      type: String,
-      required: true,
-      trim: true,
-    },
-    description: {
-      type: String,
-      required: true,
-      trim: true,
-    },
-    department: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: "Department",
-      required: true,
-    },
+    category: { type: String, enum: CATEGORY_KEYS, required: true },
+    department: { type: String, enum: DEPARTMENTS, default: null }, // null until routed
+    description: { type: String, required: true, trim: true, maxlength: 1000 },
+    imageUrl: { type: String, required: true },
+    imageHash: { type: String, default: null }, // 64-bit perceptual hash (hex)
+    imageHashBands: { type: [String], default: undefined }, // indexed pieces of imageHash, see utils/phash.js
+
+    // GeoJSON point, ready for $near queries and a heatmap
     location: {
-      address: { type: String, required: true, trim: true },
-      city: { type: String, trim: true },
-      coordinates: {
-        lat: { type: Number },
-        lng: { type: Number },
-      },
+      type: { type: String, enum: ['Point'], default: 'Point', required: true },
+      coordinates: { type: [Number], required: true }, // [lng, lat]
     },
+    locationSource: { type: String, enum: ['exif', 'gps', 'manual'], required: true },
 
-    // Who is handling it
-    assignedOfficer: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: "Officer",
-      default: null,
-    },
+    // CLIP scores (absent when the ML service was unavailable)
+    imageScore: Number,
+    textScore: Number,
+    fusionScore: Number,
+    flags: [{ type: String, enum: COMPLAINT_FLAGS }],
 
-    // Lifecycle status
-    status: {
-      type: String,
-      enum: [
-        "Pending", // just raised, awaiting routing
-        "Assigned", // routed to an officer
-        "In Progress", // officer working on it
-        "Resolved", // officer closed with a solution, awaiting user response
-        "Closed", // user accepted the solution
-        "Reopened", // user rejected the solution
-      ],
-      default: "Pending",
-    },
+    status: { type: String, enum: COMPLAINT_STATUSES, default: 'Pending Review' },
+    reviewedBy: { type: mongoose.Schema.Types.ObjectId, ref: 'Admin', default: null },
 
     // Officer's resolution
     resolution: {
-      beforePhotos: [{ type: String }], // file URLs
-      afterPhotos: [{ type: String }], // file URLs
+      afterPhotos: [{ type: String }],
       solutionGiven: { type: String, trim: true },
       resolvedAt: { type: Date },
     },
 
-    // User's response to the resolution
+    // Citizen's response to the resolution
     userFeedback: {
-      decision: {
-        type: String,
-        enum: ["Pending", "Accepted", "Rejected"],
-        default: "Pending",
-      },
       rating: { type: Number, min: 1, max: 5 },
       comment: { type: String, trim: true },
       respondedAt: { type: Date },
@@ -92,14 +76,8 @@ const complaintSchema = new mongoose.Schema(
     statusHistory: [
       {
         status: { type: String },
-        changedBy: {
-          type: mongoose.Schema.Types.ObjectId,
-          refPath: "statusHistory.changedByModel",
-        },
-        changedByModel: {
-          type: String,
-          enum: ["User", "Officer", "Admin"],
-        },
+        changedBy: { type: mongoose.Schema.Types.ObjectId, refPath: 'statusHistory.changedByModel' },
+        changedByModel: { type: String, enum: ['User', 'Officer', 'Admin'] },
         remarks: { type: String, trim: true },
         changedAt: { type: Date, default: Date.now },
       },
@@ -108,9 +86,11 @@ const complaintSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
-// Common query patterns: officer dashboards filter by department + status
-complaintSchema.index({ department: 1, status: 1 });
-complaintSchema.index({ assignedOfficer: 1, status: 1 });
-complaintSchema.index({ user: 1 });
+complaintSchema.index({ location: '2dsphere' });
+complaintSchema.index({ department: 1, status: 1, createdAt: -1 }); // officer queue
+complaintSchema.index({ status: 1, createdAt: -1 }); // admin queue
+complaintSchema.index({ user: 1, createdAt: -1 }); // citizen list + daily rate limit
+complaintSchema.index({ createdAt: -1 }); // admin stats
+complaintSchema.index({ imageHashBands: 1 }); // duplicate photo lookup
 
 export const Complaint = mongoose.model('Complaint', complaintSchema);

@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import confetti from 'canvas-confetti';
 import { useAuth } from '../context/AuthContext.jsx';
 import { fetchWaterSources, bookWaterTanker } from '../services/bookings/index.js';
@@ -151,8 +151,7 @@ const DEFAULT_ADDONS = [
 ];
 
 export default function WaterTankerBooking() {
-  const navigate = useNavigate();
-  const { user, isLoggedIn } = useAuth();
+  const { user } = useAuth();
 
   const [sources, setSources] = useState(DEFAULT_SOURCES);
   const [addonsList, setAddonsList] = useState(DEFAULT_ADDONS);
@@ -167,7 +166,7 @@ export default function WaterTankerBooking() {
   const [selectedAddons, setSelectedAddons] = useState(['extra_hose']);
   const [deliverySlot, setDeliverySlot] = useState('Immediate (25-35 mins)');
 
-  // Cart State (Zomato-style)
+  // Cart state
   const [cart, setCart] = useState(null);
   const [isCartOpen, setIsCartOpen] = useState(false);
   const [toastMsg, setToastMsg] = useState('');
@@ -300,10 +299,6 @@ export default function WaterTankerBooking() {
 
   // Handle Checkout
   function openCheckout() {
-    if (!isLoggedIn) {
-      navigate('/citizen-login');
-      return;
-    }
     setIsCartOpen(false);
     setIsCheckoutOpen(true);
   }
@@ -510,7 +505,7 @@ export default function WaterTankerBooking() {
         </div>
       </div>
 
-      {/* Floating Bottom Cart Bar (Zomato Style) */}
+      {/* Floating bottom cart bar */}
       {cart && !isCartOpen && !isCheckoutOpen && !orderConfirmed && (
         <div className="floating-cart-bar">
           <div className="container floating-cart-inner">
@@ -534,7 +529,7 @@ export default function WaterTankerBooking() {
         </div>
       )}
 
-      {/* Customizer Modal (Zomato Dish Customizer) */}
+      {/* Tanker customizer modal */}
       {selectedSource && (
         <div className="modal-backdrop" onClick={closeCustomizer}>
           <div className="customizer-modal" onClick={(e) => e.stopPropagation()}>
@@ -706,7 +701,7 @@ export default function WaterTankerBooking() {
         </div>
       )}
 
-      {/* Cart Drawer (Zomato Style) */}
+      {/* Cart drawer */}
       {isCartOpen && cart && (
         <div className="modal-backdrop" onClick={() => setIsCartOpen(false)}>
           <div className="cart-drawer" onClick={(e) => e.stopPropagation()}>
@@ -1013,12 +1008,6 @@ export default function WaterTankerBooking() {
             </div>
 
             <div className="confirmed-actions">
-              <Link
-                to={`/track-tanker/${orderConfirmed.bookingId}`}
-                className="btn btn-primary track-live-btn"
-              >
-                🚀 Track Tanker Live (Zomato-Style GPS)
-              </Link>
               <Link to="/dashboard" className="btn btn-outline">
                 Go to Dashboard
               </Link>

@@ -8,7 +8,6 @@ const garbageBookingSchema = new Schema(
       type: String,
       required: true,
       unique: true,
-      index: true,
     },
     user: {
       type: Schema.Types.ObjectId,
@@ -80,11 +79,6 @@ const garbageBookingSchema = new Schema(
       type: String,
       default: 'Sanitation Department',
     },
-    acceptedBy: {
-      type: Schema.Types.ObjectId,
-      ref: 'Officer',
-      default: null,
-    },
     rating: {
       type: Number,
       min: 1,
@@ -99,5 +93,7 @@ const garbageBookingSchema = new Schema(
   },
   { timestamps: true }
 );
+
+garbageBookingSchema.index({ createdAt: -1 }); // officer queue + admin stats
 
 export const GarbageBooking = mongoose.model('GarbageBooking', garbageBookingSchema);

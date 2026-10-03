@@ -57,11 +57,6 @@ const serviceRequestSchema = new Schema(
       type: String,
       default: null,
     },
-    acceptedBy: {
-      type: Schema.Types.ObjectId,
-      ref: 'Officer',
-      default: null,
-    },
     rating: {
       type: Number,
       min: 1,
@@ -71,6 +66,8 @@ const serviceRequestSchema = new Schema(
   },
   { timestamps: true }
 );
+
+serviceRequestSchema.index({ type: 1, createdAt: -1 }); // officer queue + admin stats
 
 export const ServiceRequest = mongoose.model('ServiceRequest', serviceRequestSchema);
 

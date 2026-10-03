@@ -1,11 +1,7 @@
 import React, { useState } from 'react';
 import './ServiceRating.css';
 
-/**
- * ServiceRating Component
- * 1-5 Star interactive rating interface for completed requests.
- * Allows citizen to rate service quality and submit feedback.
- */
+
 export default function ServiceRating({
   requestId,
   requestType = 'service_request',
@@ -80,7 +76,7 @@ export default function ServiceRating({
         <span className="rating-icon">⭐</span>
         <div>
           <h4>Rate Your Completed Service</h4>
-          <p>How was your civic service experience? Help us improve municipal operations.</p>
+          <p>How was your experience? Help us improve municipal operations.</p>
         </div>
       </div>
 

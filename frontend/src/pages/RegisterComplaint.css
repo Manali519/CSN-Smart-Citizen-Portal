@@ -70,6 +70,9 @@
 }
 
 .rc-cat-card {
+  width: 100%;
+  text-align: left;
+  font: inherit;
   background: #F8FAFC;
   border: 1.5px solid #E2E8F0;
   border-radius: 10px;
@@ -103,8 +106,7 @@
 }
 
 .rc-input,
-.rc-textarea,
-.rc-select {
+.rc-textarea {
   width: 100%;
   padding: 10px 14px;
   border: 1.5px solid #CBD5E1;
@@ -115,15 +117,8 @@
 }
 
 .rc-input:focus,
-.rc-textarea:focus,
-.rc-select:focus {
+.rc-textarea:focus {
   border-color: #EA580C;
-}
-
-.rc-two-col {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 16px;
 }
 
 .rc-submit-btn {
@@ -141,8 +136,22 @@
   background: #C2410C;
 }
 
-@media (max-width: 640px) {
-  .rc-two-col {
-    grid-template-columns: 1fr;
-  }
+.rc-help {
+  font-size: 0.78rem;
+  color: #64748B;
+  margin: 6px 0 0;
+}
+
+.rc-photo-preview {
+  display: block;
+  max-width: 100%;
+  max-height: 240px;
+  margin-top: 10px;
+  border-radius: 8px;
+  object-fit: contain;
+}
+
+.rc-submit-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
 }

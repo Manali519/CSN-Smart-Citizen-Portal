@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import confetti from 'canvas-confetti';
 import { useAuth } from '../context/AuthContext.jsx';
 import { bookGarbageVan, fetchMyGarbageBookings } from '../services/bookings/index.js';
@@ -40,8 +40,7 @@ const VOLUMES = [
 ];
 
 export default function GarbageVanBooking() {
-  const navigate = useNavigate();
-  const { user, isLoggedIn } = useAuth();
+  const { user } = useAuth();
 
   // Multi-select: array of selected category IDs
   const [selectedTypes, setSelectedTypes] = useState(['dry']);
@@ -100,10 +99,6 @@ export default function GarbageVanBooking() {
 
   async function handleSubmit(e) {
     e.preventDefault();
-    if (!isLoggedIn) {
-      navigate('/citizen-login');
-      return;
-    }
 
     if (selectedTypes.length === 0) {
       setError('Please select at least one waste category.');
@@ -119,8 +114,8 @@ export default function GarbageVanBooking() {
 
       const payload = {
         // Multi-category: send arrays for types and labels
-        wasteType: selectedTypes[0],                            // primary (backward compat)
-        wasteTypes: selectedTypes,                              // full multi-select array
+        wasteType: selectedTypes[0],
+        wasteTypes: selectedTypes,
         wasteLabel: selectedCats.map((c) => c.title).join(', '),
         wasteLabels: selectedCats.map((c) => c.title),
         volume: vol?.label || '1 - 2 Bins',

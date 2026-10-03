@@ -9,7 +9,7 @@ export default function Hero() {
         {/* Left: text content */}
         <div className="hero-text">
           <p className="hero-eyebrow">Chhatrapati Sambhajinagar Municipal Corporation</p>
-          <h1 id="hero-heading">A platfrom for everything you need , in one place!</h1>
+          <h1 id="hero-heading">A platform for everything you need, in one place!</h1>
           <p className="hero-sub">
             Report a problem, follow its progress, check daily updates for your ward,
             request a water tanker or garbage van, and reach the right officer
@@ -19,7 +19,7 @@ export default function Hero() {
             <Link to="/register-complaint" className="btn btn-on-white">
               Register a Complaint
             </Link>
-            <Link to="/track-complaint" className="btn btn-outline-on-orange">
+            <Link to="/dashboard" className="btn btn-outline-on-orange">
               Track Your Complaint
             </Link>
           </div>
@@ -29,9 +29,7 @@ export default function Hero() {
         <div className="hero-image-wrap">
           <img
             src="/assets/csn-welcome.jpg"
-            alt="Chhatrapati Sambhajinagar city skyline at sunset"
-            className="hero-city-img"
-          />
+            className="hero-city-img" />
         </div>
       </div>
     </section>

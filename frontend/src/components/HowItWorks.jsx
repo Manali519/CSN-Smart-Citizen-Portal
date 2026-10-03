@@ -18,7 +18,7 @@ const STEPS = [
     n: '3',
     step: 'Step 03',
     title: 'Track the Outcome',
-    desc: 'Get an instant reference tracking number and follow progress in real-time.',
+    desc: 'Get an instant reference tracking number and follow progress.',
   },
   {
     n: '4',
@@ -33,7 +33,7 @@ export default function HowItWorks() {
     <section id="how-it-works" className="section how" aria-labelledby="how-heading">
       <div className="container">
         <div className="section-heading">
-          <span className="how-tag">Simple 4-Step Process</span>
+          <span className="how-tag">Simple 4 Step Process</span>
           <h2 id="how-heading">How It Works</h2>
           <p>Resolve civic issues and access municipal services in four simple steps.</p>
         </div>

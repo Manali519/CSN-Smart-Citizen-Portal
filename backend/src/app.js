@@ -9,11 +9,16 @@ import requestRoutes from './routes/requestRoutes.js';
 import tankerRoutes from './routes/tankerRoutes.js';
 import garbageRoutes from './routes/garbageRoutes.js';
 import officerRoutes from './routes/officerRoutes.js';
+import adminRoutes from './routes/adminRoutes.js';
+import paymentRoutes from './routes/paymentRoutes.js';
+import publicRoutes from './routes/publicRoutes.js';
+import { complaintConfig } from './config/complaint.config.js';
 
 export function createApp() {
   const app = express();
 
   app.disable('x-powered-by');
+  app.set('trust proxy', env.trustProxy);
   app.use(
     helmet({
       crossOriginResourcePolicy: false,
@@ -32,7 +37,7 @@ export function createApp() {
         if (env.clientOrigins.includes(origin)) {
           return callback(null, true);
         }
-        callback(new Error(`CORS blocked for origin: ${origin}`));
+        callback(Object.assign(new Error(`CORS blocked for origin: ${origin}`), { status: 403 }));
       },
       credentials: true,
     })
@@ -44,24 +49,29 @@ export function createApp() {
     res.json({ success: true, status: 'ok', time: new Date().toISOString() });
   });
 
+  // Complaint photos (random UUID file names)
+  app.use('/uploads', express.static(complaintConfig.uploadDir, { index: false, dotfiles: 'deny', maxAge: '7d' }));
+
   app.use('/api/auth', authRoutes);
   app.use('/api/complaints', complaintRoutes);
   app.use('/api/requests', requestRoutes);
   app.use('/api/tanker', tankerRoutes);
   app.use('/api/services/garbage-van', garbageRoutes);
   app.use('/api/officer', officerRoutes);
+  app.use('/api/admin', adminRoutes);
+  app.use('/api/payments', paymentRoutes);
+  app.use('/api/public', publicRoutes);
 
   app.use((req, res) => {
     res.status(404).json({ success: false, message: `No route: ${req.method} ${req.path}` });
   });
 
   app.use((err, req, res, next) => {
-    console.error('[error]', err);
-    const status = err.status || 500;
-    res.status(status).json({
-      success: false,
-      message: env.nodeEnv === 'production' ? 'Something went wrong. Please try again.' : err.message,
-    });
+    const status = err.status || err.statusCode || 500;
+    if (status >= 500) console.error('[error]', err);
+    // Client errors (bad JSON, CORS, ...) keep their message; server errors are hidden in production.
+    const hide = status >= 500 && env.nodeEnv === 'production';
+    res.status(status).json({ success: false, message: hide ? 'Something went wrong. Please try again.' : err.message });
   });
 
   return app;

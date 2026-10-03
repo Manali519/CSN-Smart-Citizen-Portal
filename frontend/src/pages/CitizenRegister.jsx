@@ -1,7 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { useGoogleSignIn } from '../hooks/useGoogleSignIn.js';
-import { decodeGoogleCredentialForDisplay } from '../utils/googleCredential.js';
+import { useGoogleSignIn, decodeGoogleCredentialForDisplay } from '../hooks/useGoogleSignIn.js';
 import { registerCitizen, verifyRegistrationOtp, resendRegistrationOtp } from '../api/auth.js';
 import './CitizenRegister.css';
 
@@ -308,7 +307,7 @@ export default function CitizenRegister() {
             <span className="register-tag">Verify your email</span>
             <h1>Enter the OTP</h1>
             <p>
-              We sent a 6-digit code to <strong>{otpEmail}</strong>. Expires in 3 minutes
+              We sent a 4 digit code to <strong>{otpEmail}</strong>. Expires in 3 minutes
               &mdash; enter it below to create your account.
             </p>
 

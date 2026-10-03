@@ -99,68 +99,6 @@
   color: #ffffff;
 }
 
-/* Mock Notification Banner */
-.mock-notification-banner {
-  max-width: 1280px;
-  margin: 16px auto 0 auto;
-  padding: 12px 18px;
-  background: linear-gradient(135deg, #ecfdf5 0%, #d1fae5 100%);
-  border: 1.5px solid #10b981;
-  border-radius: 10px;
-  display: flex;
-  align-items: center;
-  gap: 14px;
-  box-shadow: 0 4px 16px rgba(16, 185, 129, 0.15);
-  animation: slideDownNotification 0.3s ease-out;
-}
-
-@keyframes slideDownNotification {
-  from {
-    opacity: 0;
-    transform: translateY(-8px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-.notification-icon {
-  font-size: 1.6rem;
-  line-height: 1;
-}
-
-.notification-body {
-  flex: 1;
-}
-
-.notification-body strong {
-  color: #065f46;
-  font-size: 0.9rem;
-  display: block;
-}
-
-.notification-body p {
-  margin: 2px 0 4px 0;
-  font-size: 0.88rem;
-  color: #047857;
-  font-weight: 600;
-}
-
-.notification-meta {
-  font-size: 0.76rem;
-  color: #059669;
-}
-
-.btn-dismiss-alert {
-  background: none;
-  border: none;
-  font-size: 1.1rem;
-  color: #047857;
-  cursor: pointer;
-  padding: 4px 8px;
-}
-
 /* Main Container */
 .officer-container {
   max-width: 1280px;
@@ -169,53 +107,6 @@
 }
 
 /* Department Header Banner (Isolated Queue) */
-.department-header-banner {
-  background: #ffffff;
-  border-radius: 14px;
-  padding: 20px 24px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
-  border: 1px solid #e2e8f0;
-  border-left: 5px solid #0284c7;
-  margin-bottom: 24px;
-  display: flex;
-  align-items: center;
-  gap: 18px;
-}
-
-.dept-banner-icon {
-  font-size: 2.5rem;
-  line-height: 1;
-}
-
-.dept-banner-details {
-  flex: 1;
-}
-
-.dept-isolated-badge {
-  display: inline-block;
-  font-size: 0.74rem;
-  font-weight: 800;
-  text-transform: uppercase;
-  letter-spacing: 0.04em;
-  color: #0369a1;
-  background: #e0f2fe;
-  padding: 3px 10px;
-  border-radius: 999px;
-  margin-bottom: 6px;
-}
-
-.dept-banner-details h2 {
-  margin: 0 0 4px 0;
-  font-size: 1.35rem;
-  font-weight: 800;
-  color: #0f172a;
-}
-
-.dept-banner-details p {
-  margin: 0;
-  font-size: 0.86rem;
-  color: #64748b;
-}
 
 /* Controls Bar */
 .dashboard-controls-bar {
@@ -526,10 +417,6 @@
   .officer-topbar-inner {
     flex-direction: column;
     align-items: flex-start;
-  }
-
-  .department-tabs-grid {
-    grid-template-columns: 1fr;
   }
 
   .dashboard-controls-bar {

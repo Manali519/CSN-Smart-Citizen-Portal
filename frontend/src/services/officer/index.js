@@ -7,10 +7,13 @@ export function officerLoginApi(payload) {
   });
 }
 
-export function fetchDepartmentRequests(department) {
-  return apiRequest(`/api/officer/requests?department=${encodeURIComponent(department)}`, {
-    method: 'GET',
-  });
+export function officerLogoutApi() {
+  return apiRequest('/api/officer/logout', { method: 'POST' });
+}
+
+/** Requests for the logged-in officer's department (taken from the session cookie). */
+export function fetchDepartmentRequests() {
+  return apiRequest('/api/officer/requests', { method: 'GET' });
 }
 
 export function acceptOfficerRequest({ requestId, type }) {

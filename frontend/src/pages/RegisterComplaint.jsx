@@ -1,70 +1,100 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import confetti from 'canvas-confetti';
-import { useAuth } from '../context/AuthContext.jsx';
-import { registerComplaint } from '../services/complaints/index.js';
+import { fetchComplaintCategories, registerComplaint } from '../services/complaints/index.js';
+import MapView from '../components/MapView.jsx';
 import './RegisterComplaint.css';
 
-const CIVIC_CATEGORIES = [
-  { id: 'water', label: '💧 Water Supply & Leakage', desc: 'Broken pipe, low pressure, dirty water' },
-  { id: 'garbage', label: '🗑️ Garbage & Solid Waste', desc: 'Unattended dustbins, public garbage dumping' },
-  { id: 'roads', label: '🚧 Potholes & Road Damage', desc: 'Dangerous craters, damaged asphalt' },
-  { id: 'lights', label: '💡 Streetlights & Electricity', desc: 'Dead streetlight pole, sparking wire' },
-  { id: 'drainage', label: '🌊 Drainage & Sewer Overflow', desc: 'Choked manhole, gutter water backflow' },
-  { id: 'health', label: '🏥 Public Health & Sanitation', desc: 'Mosquito breeding, stray animal menace' },
-];
+const MIN_TEXT = 10;
+const MAX_TEXT = 1000;
 
 export default function RegisterComplaint() {
-  const navigate = useNavigate();
-  const { user, isLoggedIn } = useAuth();
-
-  const [category, setCategory] = useState('water');
-  const [title, setTitle] = useState('');
+  const [categories, setCategories] = useState([]);
+  const [category, setCategory] = useState('');
   const [description, setDescription] = useState('');
-  const [location, setLocation] = useState('');
-  const [ward, setWard] = useState('Ward 4 - CIDCO');
+  const [image, setImage] = useState(null);
+  const [preview, setPreview] = useState('');
+  const [coords, setCoords] = useState(null); // { lat, lng, source: 'gps' | 'manual' }
+  const [needPin, setNeedPin] = useState(false);
 
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState('');
   const [confirmedComplaint, setConfirmedComplaint] = useState(null);
 
   useEffect(() => {
-    if (user?.streetAddress) {
-      setLocation(user.streetAddress);
-    }
-  }, [user]);
+    fetchComplaintCategories()
+      .then((res) => setCategories(res.categories || []))
+      .catch(() => setError('Could not load complaint categories. Please refresh the page.'));
+
+    // Ask for GPS in the background so it is ready as a fallback when the photo has no EXIF location.
+    navigator.geolocation?.getCurrentPosition(
+      (p) => setCoords((c) => c || { lat: p.coords.latitude, lng: p.coords.longitude, source: 'gps' }),
+      () => {},
+      { enableHighAccuracy: true, timeout: 10000 }
+    );
+  }, []);
+
+  useEffect(() => {
+    if (!image) return undefined;
+    const url = URL.createObjectURL(image);
+    setPreview(url);
+    return () => URL.revokeObjectURL(url);
+  }, [image]);
+
+  function resetForm(form) {
+    setCategory('');
+    setDescription('');
+    setImage(null);
+    setPreview('');
+    setNeedPin(false);
+    setCoords((c) => (c?.source === 'manual' ? null : c)); // a map pin belongs to one complaint only
+    form.reset();
+  }
 
   async function handleSubmit(e) {
     e.preventDefault();
-    if (!isLoggedIn) {
-      navigate('/citizen-login');
+    if (!category) {
+      setError('Please choose an issue category.');
       return;
     }
 
+    const form = e.currentTarget;
     setError('');
     setSubmitting(true);
 
     try {
-      const selectedCat = CIVIC_CATEGORIES.find((c) => c.id === category);
-      const res = await registerComplaint({
-        category: selectedCat?.label || 'Civic Issue',
-        title: title || `${selectedCat?.label} reported at ${ward}`,
-        description,
-        location: `${location}, ${ward}`,
-      });
+      const fd = new FormData();
+      fd.append('category', category);
+      fd.append('description', description.trim());
+      fd.append('image', image);
+      if (coords) {
+        fd.append('lat', coords.lat);
+        fd.append('lng', coords.lng);
+        fd.append('locationSource', coords.source);
+      }
 
-      setConfirmedComplaint(res.complaint);
+      const res = await registerComplaint(fd);
+      setConfirmedComplaint({ ...res.complaint, message: res.message });
+      resetForm(form);
       try {
         confetti({ particleCount: 50, spread: 60, origin: { y: 0.6 } });
       } catch {
         // ignore
       }
     } catch (err) {
-      setError(err.message || 'Failed to submit complaint. Please check your inputs.');
+      if (err.code === 'LOCATION_REQUIRED' || (err.code === 'OUT_OF_CITY' && err.data?.source !== 'exif')) {
+        // No usable location: let the citizen pin it on the map.
+        setCoords(null);
+        setNeedPin(true);
+      }
+      setError(err.message || 'Failed to submit complaint. Please try again.');
     } finally {
       setSubmitting(false);
     }
   }
+
+  const textLength = description.trim().length;
+  const canSubmit = !submitting && image && textLength >= MIN_TEXT && (!needPin || coords);
 
   return (
     <div className="register-complaint-page">
@@ -74,7 +104,7 @@ export default function RegisterComplaint() {
           <h1>📝 Register a Citizen Complaint</h1>
           <p className="rc-hero-sub">
             Lodge complaints directly with Chhatrapati Sambhajinagar Municipal Corporation.
-            Track resolution status, officer progress, and inspect before/after proofs.
+            Your photo and its location are verified automatically and routed to the right department.
           </p>
         </div>
       </section>
@@ -82,91 +112,80 @@ export default function RegisterComplaint() {
       <div className="container rc-content-wrap">
         <div className="rc-form-card">
           <h2>Lodge Civic Complaint</h2>
-          <p className="rc-sub">Your complaint will be routed to the respective ward engineer immediately</p>
+          <p className="rc-sub">Choose a category, upload a photo of the problem and describe it</p>
 
-          {error && <div className="checkout-error-banner">{error}</div>}
+          {error && <div className="checkout-error-banner" role="alert">{error}</div>}
 
           <form onSubmit={handleSubmit}>
-            {/* Category Grid */}
             <div className="rc-field-group">
-              <label className="rc-label">1. Choose Issue Category</label>
-              <div className="rc-cat-grid">
-                {CIVIC_CATEGORIES.map((cat) => (
-                  <div
-                    key={cat.id}
-                    className={`rc-cat-card ${category === cat.id ? 'selected' : ''}`}
-                    onClick={() => setCategory(cat.id)}
+              <span className="rc-label">1. Choose Issue Category</span>
+              <div className="rc-cat-grid" role="radiogroup" aria-label="Issue category">
+                {categories.map((cat) => (
+                  <button
+                    key={cat.key}
+                    type="button"
+                    role="radio"
+                    aria-checked={category === cat.key}
+                    className={`rc-cat-card ${category === cat.key ? 'selected' : ''}`}
+                    onClick={() => setCategory(cat.key)}
                   >
                     <strong>{cat.label}</strong>
-                    <p>{cat.desc}</p>
-                  </div>
+                    <p>{cat.hint}</p>
+                  </button>
                 ))}
               </div>
             </div>
 
-            {/* Title & Description */}
             <div className="rc-field-group">
-              <label className="rc-label">2. Problem Summary</label>
+              <label className="rc-label" htmlFor="rc-photo">2. Photo of the Problem</label>
               <input
-                type="text"
+                id="rc-photo"
+                type="file"
+                accept="image/jpeg,image/png,image/webp"
                 required
-                placeholder="e.g. Major water pipeline leakage near central bus stand"
-                value={title}
-                onChange={(e) => setTitle(e.target.value)}
                 className="rc-input"
+                onChange={(e) => setImage(e.target.files[0] || null)}
               />
+              <p className="rc-help">
+                Take the photo at the problem spot. Its location is read from the photo, or from your device GPS.
+              </p>
+              {image && preview && <img src={preview} alt="Selected complaint" className="rc-photo-preview" />}
             </div>
 
             <div className="rc-field-group">
-              <label className="rc-label">3. Detailed Description</label>
+              <label className="rc-label" htmlFor="rc-description">3. Describe the Problem</label>
               <textarea
+                id="rc-description"
                 rows={4}
                 required
-                placeholder="Describe the exact location, duration of the issue, and severity..."
+                minLength={MIN_TEXT}
+                maxLength={MAX_TEXT}
+                placeholder="Describe the exact spot, how long the issue has existed, and how severe it is..."
                 value={description}
                 onChange={(e) => setDescription(e.target.value)}
                 className="rc-textarea"
               />
+              <p className="rc-help">{textLength}/{MAX_TEXT} characters (minimum {MIN_TEXT})</p>
             </div>
 
-            {/* Ward & Address */}
-            <div className="rc-two-col">
+            {needPin && (
               <div className="rc-field-group">
-                <label className="rc-label"> Zone</label>
-                <select value={ward} onChange={(e) => setWard(e.target.value)} className="rc-select">
-                  <option value="A 1 Town Hall">A 1 Town Hall</option>
-                  <option value="B 5 Cidco N6">B 5 Cidco N6</option>
-                  <option value="C 3 Central Naka">C 3 Central Naka</option>
-                  <option value="D 9 Krantichowk">D 9 Krantichowk</option>
-                  <option value="E 6 Cidco N6">E 6 Cidco N6</option>
-                  <option value="F 7 Jawahar Colony">F 7 Jawahar Colony</option>
-                  <option value="G 2 Mondha Naka Sille Khana">G 2 Mondha Naka Sille Khana</option>
-                  <option value="H 4 Saubhagya Mangalkaryalya ">H 4 Saubhagya Mangalkaryalya</option>
-                  <option value="I 8 Satara Parisar">I 8 Satara Parisar</option>
-                </select>
+                <span className="rc-label">4. Pin the Problem Location</span>
+                <p className="rc-help">Tap the map where the problem is, then submit again.</p>
+                <MapView pin={coords} onPick={(lat, lng) => setCoords({ lat, lng, source: 'manual' })} />
+                {coords && (
+                  <p className="rc-help">Pinned at {coords.lat.toFixed(5)}, {coords.lng.toFixed(5)}</p>
+                )}
               </div>
+            )}
 
-              <div className="rc-field-group">
-                <label className="rc-label">Specific Street Address / Landmark</label>
-                <input
-                  type="text"
-                  required
-                  placeholder="e.g. Beside Shivaji Statue, Osmanpura Circle"
-                  value={location}
-                  onChange={(e) => setLocation(e.target.value)}
-                  className="rc-input"
-                />
-              </div>
-            </div>
-
-            <button type="submit" className="btn btn-primary rc-submit-btn" disabled={submitting}>
-              {submitting ? 'Submitting Grievance...' : 'Submit Complaint to CSMC →'}
+            <button type="submit" className="btn btn-primary rc-submit-btn" disabled={!canSubmit}>
+              {submitting ? 'Verifying & Submitting...' : 'Submit Complaint to CSMC →'}
             </button>
           </form>
         </div>
       </div>
 
-      {/* Confirmed Modal */}
       {confirmedComplaint && (
         <div className="modal-backdrop">
           <div className="order-confirmed-modal">
@@ -179,28 +198,25 @@ export default function RegisterComplaint() {
 
             <div className="confirmed-details-card">
               <div className="detail-line">
-                <span>Issue:</span>
-                <strong>{confirmedComplaint.title}</strong>
-              </div>
-              <div className="detail-line">
-                <span>Ward &amp; Location:</span>
-                <strong>{confirmedComplaint.location?.address}</strong>
+                <span>Category:</span>
+                <strong>{confirmedComplaint.categoryLabel}</strong>
               </div>
               <div className="detail-line">
                 <span>Status:</span>
-                <span className="status-pill status-pending">Pending Routing</span>
+                <span className="status-pill status-pending">
+                  {confirmedComplaint.status === 'Pending Review'
+                    ? `Routed to ${confirmedComplaint.department}`
+                    : 'Under admin verification'}
+                </span>
               </div>
             </div>
+            <p className="rc-help">{confirmedComplaint.message}</p>
 
             <div className="confirmed-actions">
               <Link to="/dashboard" className="btn btn-primary">
                 View in Citizen Dashboard
               </Link>
-              <button
-                type="button"
-                className="btn btn-outline"
-                onClick={() => setConfirmedComplaint(null)}
-              >
+              <button type="button" className="btn btn-outline" onClick={() => setConfirmedComplaint(null)}>
                 Register Another Complaint
               </button>
             </div>

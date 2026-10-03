@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
+import { officerLoginApi } from '../services/officer/index.js';
 import './OfficerLogin.css';
 
 export default function OfficerLogin() {
@@ -36,15 +37,12 @@ export default function OfficerLogin() {
 
     const resolvedDept = DEPT_MAP[department] || department;
 
-    import('../services/officer/index.js')
-      .then(({ officerLoginApi }) =>
-        officerLoginApi({ officerId: officerId.trim(), password: password.trim(), department: resolvedDept })
-      )
+    officerLoginApi({ officerId: officerId.trim(), password: password.trim(), department: resolvedDept })
       .then((res) => {
         if (!res?.success) {
           throw new Error(res?.message || 'Authentication failed.');
         }
-        // Securely store session with NO password
+        // Display info only; authentication is the httpOnly session cookie.
         const session = {
           officerId: res.officer?.officerId || officerId.trim(),
           officerName: res.officer?.officerName || `${resolvedDept} Officer`,
@@ -123,6 +121,12 @@ export default function OfficerLogin() {
             Are you a citizen?{' '}
             <Link to="/citizen-login" className="officer-link">
               Citizen Login here
+            </Link>
+          </p>
+          <p>
+            Administrator?{' '}
+            <Link to="/admin-login" className="officer-link">
+              Admin Login here
             </Link>
           </p>
           <p className="officer-help-text">
