@@ -4,7 +4,7 @@
   "buildCommand": "npm run build",
   "outputDirectory": "dist",
   "rewrites": [
-    { "source": "/api/:path*", "destination": "https://BACKEND_URL_SET_BY_DEPLOY_SCRIPT/api/:path*" },
+    { "source": "/api/:path*", "destination": "https://csnportal.vercel.app/api/:path*" },
     { "source": "/((?!api/).*)", "destination": "/index.html" }
   ]
 }

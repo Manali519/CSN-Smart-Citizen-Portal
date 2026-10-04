@@ -1,4 +1,5 @@
 import express from 'express';
+import mongoose from 'mongoose';
 import helmet from 'helmet';
 import cors from 'cors';
 import cookieParser from 'cookie-parser';
@@ -47,7 +48,9 @@ export function createApp() {
 
   app.get('/api/health', (req, res) => {
     // ip: the client address as the API sees it (behind the frontend's /api rewrite this may be Vercel's proxy)
-    res.json({ success: true, status: 'ok', time: new Date().toISOString(), ip: req.ip });
+    // db: whether MongoDB is reachable; the reason for a failure is in the server log ("[db] ...").
+    const db = mongoose.connection.readyState === 1 ? 'connected' : 'unreachable';
+    res.json({ success: true, status: 'ok', db, time: new Date().toISOString(), ip: req.ip });
   });
 
   // Local photo storage (development only; production photos are served by Vercel Blob)

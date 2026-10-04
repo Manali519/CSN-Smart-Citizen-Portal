@@ -6,6 +6,11 @@ import { connectDB } from '../src/config/db.js';
 const app = createApp();
 
 export default async function handler(req, res) {
+  // The health check answers even when the database is down, and reports its state (see app.js).
+  if (req.url === '/api/health' || req.url.startsWith('/api/health?')) {
+    await connectDB().catch((err) => console.error('[db] MongoDB connection failed:', err.message));
+    return app(req, res);
+  }
   try {
     await connectDB();
   } catch (err) {

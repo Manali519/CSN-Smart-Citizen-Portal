@@ -3,7 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { fetchComplaintQueue, reviewComplaint, resolveComplaint } from '../services/complaints/index.js';
 import { officerLogoutApi } from '../services/officer/index.js';
 import { adminLogoutApi, fetchAdminProfile } from '../services/admin/index.js';
-import { assetUrl } from '../api/client.js';
+import { assetUrl, MAX_PHOTO_MB, photoTooLarge } from '../api/client.js';
 import MapView from '../components/MapView.jsx';
 import AdminStats from '../components/AdminStats.jsx';
 import './ComplaintDashboard.css';
@@ -73,7 +73,17 @@ function ResolveForm({ complaint, onDone, onCancel }) {
       </label>
       <label className="cq-field">
         <span>Proof photo (optional)</span>
-        <input type="file" accept="image/jpeg,image/png,image/webp" onChange={(e) => setProof(e.target.files[0] || null)} />
+        <input
+          type="file"
+          accept="image/jpeg,image/png,image/webp"
+          onChange={(e) => {
+            const file = e.target.files[0] || null;
+            const tooLarge = photoTooLarge(file);
+            setError(tooLarge ? `Proof photo must be ${MAX_PHOTO_MB} MB or smaller.` : '');
+            if (tooLarge) e.target.value = '';
+            setProof(tooLarge ? null : file);
+          }}
+        />
       </label>
       {error && <p className="cq-error" role="alert">{error}</p>}
       <div className="cq-resolve-actions">
@@ -261,6 +271,11 @@ export default function ComplaintDashboard({ role }) {
                       <span key={f} className="cq-flag">{FLAG_LABELS[f] || f}</span>
                     ))}
                   </div>
+                )}
+                {role === 'admin' && c.aiReason && (
+                  <p className="cq-ai-reason">
+                    <strong>AI reason:</strong> {c.aiReason}
+                  </p>
                 )}
                 {c.resolution?.resolvedAt && (
                   <div className="cq-resolution">

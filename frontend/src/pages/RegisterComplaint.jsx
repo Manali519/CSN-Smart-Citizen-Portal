@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import confetti from 'canvas-confetti';
 import { fetchComplaintCategories, registerComplaint } from '../services/complaints/index.js';
 import MapView from '../components/MapView.jsx';
+import { MAX_PHOTO_MB, photoTooLarge } from '../api/client.js';
 import './RegisterComplaint.css';
 
 const MIN_TEXT = 10;
@@ -144,7 +145,17 @@ export default function RegisterComplaint() {
                 accept="image/jpeg,image/png,image/webp"
                 required
                 className="rc-input"
-                onChange={(e) => setImage(e.target.files[0] || null)}
+                onChange={(e) => {
+                  const file = e.target.files[0] || null;
+                  if (photoTooLarge(file)) {
+                    setError(`Photo must be ${MAX_PHOTO_MB} MB or smaller.`);
+                    e.target.value = '';
+                    setImage(null);
+                    return;
+                  }
+                  setError('');
+                  setImage(file);
+                }}
               />
               <p className="rc-help">
                 Take the photo at the problem spot. Its location is read from the photo, or from your device GPS.

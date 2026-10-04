@@ -114,7 +114,7 @@ export default function CitizenRegister() {
       !form.streetAddress &&
       !!form.email;
 
-    if (signupMethod === 'manual' && !isEmailOnlyFlow && form.password !== form.confirmPassword) {
+    if (signupMethod === 'manual' && form.password !== form.confirmPassword) {
       setFieldErrors({ confirmPassword: 'Passwords do not match' });
       return;
     }

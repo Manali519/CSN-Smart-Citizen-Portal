@@ -1,8 +1,12 @@
-// Empty in production: Vercel proxies /api to the Cloud Run backend (frontend/vercel.json).
+// Empty in production: Vercel proxies /api to the backend Vercel project (frontend/vercel.json).
 export const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || '';
 
-// Production photos are absolute Cloud Storage URLs; local-development photos are /uploads paths on the API.
+// Production photos are absolute Vercel Blob URLs; local-development photos are /uploads paths on the API.
 export const assetUrl = (path) => (/^https?:\/\//.test(path) ? path : `${API_BASE_URL}${path}`);
+
+// Matches backend/src/middleware/upload.js (Vercel Functions accept request bodies up to 4.5 MB).
+export const MAX_PHOTO_MB = 4;
+export const photoTooLarge = (file) => Boolean(file && file.size > MAX_PHOTO_MB * 1024 * 1024);
 
 export async function apiRequest(path, { method = 'POST', body } = {}) {
   const isForm = body instanceof FormData;

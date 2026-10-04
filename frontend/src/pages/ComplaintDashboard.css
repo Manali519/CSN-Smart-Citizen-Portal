@@ -198,6 +198,13 @@
   margin-top: 8px;
 }
 
+.cq-ai-reason {
+  margin: 8px 0 0;
+  font-size: 0.85rem;
+  color: var(--ink-soft);
+  overflow-wrap: anywhere;
+}
+
 .cq-flag {
   padding: 2px 8px;
   border-radius: 999px;
