@@ -1,7 +1,8 @@
 import multer from 'multer';
 
 export const IMAGE_EXT = { 'image/jpeg': '.jpg', 'image/png': '.png', 'image/webp': '.webp' };
-const MAX_IMAGE_BYTES = 8 * 1024 * 1024;
+// Vercel Functions accept request bodies up to 4.5 MB, multipart overhead included.
+export const MAX_IMAGE_BYTES = 4 * 1024 * 1024;
 
 const upload = multer({
   storage: multer.memoryStorage(), // buffer needed for EXIF + forwarding to the ML service
@@ -19,7 +20,7 @@ function uploadImage(field) {
       return res.status(tooBig ? 413 : 400).json({
         success: false,
         code: 'BAD_IMAGE',
-        message: tooBig ? 'Photo must be 8 MB or smaller.' : err.message,
+        message: tooBig ? 'Photo must be 4 MB or smaller.' : err.message,
       });
     });
   };

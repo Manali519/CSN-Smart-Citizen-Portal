@@ -45,12 +45,13 @@ export function createApp() {
   app.use(express.json({ limit: '20kb' }));
   app.use(cookieParser());
 
-  app.get('/api/health', (_req, res) => {
-    res.json({ success: true, status: 'ok', time: new Date().toISOString() });
+  app.get('/api/health', (req, res) => {
+    // ip: the client address as the API sees it (behind the frontend's /api rewrite this may be Vercel's proxy)
+    res.json({ success: true, status: 'ok', time: new Date().toISOString(), ip: req.ip });
   });
 
-  // Local photo storage (development only; production photos are served by Cloud Storage)
-  if (!complaintConfig.gcsBucket) {
+  // Local photo storage (development only; production photos are served by Vercel Blob)
+  if (!complaintConfig.blobToken) {
     app.use('/uploads', express.static(complaintConfig.uploadDir, { index: false, dotfiles: 'deny', maxAge: '7d' }));
   }
 

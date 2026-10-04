@@ -1,17 +1,19 @@
-import 'dotenv/config';
+// Environment comes from the Vercel project settings in production and from backend/.env locally
+// (loaded by `node --env-file-if-exists=.env` in the npm scripts).
 
 function required(name, fallback = undefined) {
   const value = process.env[name] ?? fallback;
   if (value === undefined) {
-    throw new Error(`Missing required environment variable: ${name}. Copy .env.example to .env and fill it in.`);
+    throw new Error(`Missing required environment variable: ${name}. Set it in the Vercel project settings, or copy .env.example to .env for local development.`);
   }
   return value;
 }
 
-const nodeEnv = process.env.NODE_ENV || 'development';
+// Vercel production deployments (VERCEL_ENV=production) default to production mode.
+const nodeEnv = process.env.NODE_ENV || (process.env.VERCEL_ENV === 'production' ? 'production' : 'development');
 const isProd = nodeEnv === 'production';
 
-// The frontend proxies /api to this service (frontend/vercel.json), so auth cookies are first-party and
+// The frontend proxies /api to this Vercel project (frontend/vercel.json), so auth cookies are first-party and
 // SameSite=Lax works. Use COOKIE_SAMESITE=none only if the browser calls the API on another site directly.
 const sameSite = (process.env.COOKIE_SAMESITE || 'lax').toLowerCase();
 if (!['lax', 'strict', 'none'].includes(sameSite)) {
@@ -20,14 +22,14 @@ if (!['lax', 'strict', 'none'].includes(sameSite)) {
 
 export const env = {
   nodeEnv,
-  // Number of reverse proxies in front of the API (e.g. 1 on Cloud Run or behind nginx). Needed so rate limits
+  // Number of reverse proxies in front of the API (e.g. 1 on Vercel or behind nginx). Needed so rate limits
   // see the real client IP; leave 0 when the API is reached directly, or clients could spoof their IP.
-  // Cloud Run (which sets K_SERVICE) always sits behind Google's front end.
-  trustProxy: Number(process.env.TRUST_PROXY || (process.env.K_SERVICE ? 1 : 0)),
+  // Vercel (which sets VERCEL=1) always sits behind its edge network, which overwrites X-Forwarded-For.
+  trustProxy: Number(process.env.TRUST_PROXY || (process.env.VERCEL ? 1 : 0)),
   // Shared by every auth cookie; clearCookie needs the same attributes or browsers keep the cookie.
   cookie: { httpOnly: true, secure: isProd || sameSite === 'none', sameSite },
   port: Number(process.env.PORT || 5000),
-  clientOrigins: (process.env.CLIENT_ORIGINS || 'http://localhost:5173')
+  clientOrigins: (process.env.CLIENT_ORIGINS || 'http://localhost:3000')
     .split(',')
     .map((o) => o.trim())
     .filter(Boolean),

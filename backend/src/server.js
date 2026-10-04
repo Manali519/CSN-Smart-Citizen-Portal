@@ -4,6 +4,7 @@ import { connectDB } from './config/db.js';
 import { verifyMailer } from './utils/mailer.js';
 import { createApp } from './app.js';
 
+// Local development / self-hosted entry point. On Vercel, api/index.js serves the same app as a function.
 async function main() {
   await connectDB();
   await verifyMailer();
@@ -13,7 +14,7 @@ async function main() {
     console.log(`[server] Smart City Portal API listening on port ${env.port}`);
   });
 
-  // Cloud Run sends SIGTERM before replacing the instance: finish in-flight requests, then close the DB.
+  // On SIGTERM / Ctrl+C: finish in-flight requests, then close the DB.
   const shutdown = (signal) => {
     console.log(`[server] ${signal} received, shutting down`);
     setTimeout(() => process.exit(1), 10_000).unref();
@@ -27,5 +28,3 @@ main().catch((err) => {
   console.error('[startup] Failed to start server:', err.message);
   process.exit(1);
 });
-
-

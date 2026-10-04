@@ -1,4 +1,5 @@
 import { OAuth2Client } from 'google-auth-library';
+import validator from 'validator';
 import { env } from '../config/env.js';
 
 const client = new OAuth2Client(env.googleClientId);
@@ -28,7 +29,9 @@ export async function verifyGoogleIdToken(idToken) {
 
   return {
     googleId: payload.sub,
-    email: payload.email.toLowerCase(),
+    // Same normalization as express-validator's normalizeEmail() on typed emails (e.g. Gmail dots removed), so a
+    // Google account and the email typed on the OTP / login forms always resolve to the same stored address.
+    email: validator.normalizeEmail(payload.email) || payload.email.toLowerCase(),
     firstName: payload.given_name || '',
     lastName: payload.family_name || '',
   };

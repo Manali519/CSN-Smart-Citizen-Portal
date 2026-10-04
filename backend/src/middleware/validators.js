@@ -43,9 +43,11 @@ export const registerValidationRules = [
   body('googleIdToken')
     .if(body('signupMethod').equals('google'))
     .notEmpty().withMessage('Missing Google credential'),
+  // Manual accounts log in with a password, so it is required (without one the account would be locked out
+  // as soon as the first session expires).
   body('password')
-    .optional({ checkFalsy: true })
     .if(body('signupMethod').equals('manual'))
+    .isString().withMessage('Password is required')
     .isLength({ min: 8 }).withMessage('Password must be at least 8 characters')
     .matches(/[A-Za-z]/).withMessage('Password must include at least one letter')
     .matches(/[0-9]/).withMessage('Password must include at least one number'),

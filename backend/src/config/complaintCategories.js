@@ -1,6 +1,6 @@
 /**
  * Complaint category -> department routing table (single source of truth on the Node side).
- * Keys must match the category keys in ml-service/config/phrases.json.
+ * Keys must match the category keys in ./complaintPhrases.js.
  */
 export const COMPLAINT_CATEGORIES = [
   { key: 'water', department: 'Water Supply and Drainage Department', hint: 'Pipe leaks, no water supply, blocked drains, sewage overflow' },

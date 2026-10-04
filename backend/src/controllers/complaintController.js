@@ -2,7 +2,7 @@ import mongoose from 'mongoose';
 import { Complaint, COMPLAINT_STATUSES, OFFICER_OPEN_STATUSES } from '../models/Complaint.js';
 import { COMPLAINT_CATEGORIES, departmentFor } from '../config/complaintCategories.js';
 import { complaintConfig as cfg } from '../config/complaint.config.js';
-import { validateComplaint } from '../utils/mlClient.js';
+import { prepareImage, validateComplaint } from '../utils/gemini.js';
 import { gpsFromExif, isValidPoint, inCity, toNum } from '../utils/location.js';
 import { generateReferenceNo } from '../utils/reference.js';
 import { saveImage, removeImage } from '../utils/imageStore.js';
@@ -15,7 +15,7 @@ const HARD_DAILY_LIMIT = cfg.dailyLimit * 2;
 // Admins only handle complaints the automatic checks held back; verified ones belong to officers.
 const ADMIN_STATUSES = ['Suspected Fake', 'Rejected'];
 // Internal scoring fields are never shown to citizens.
-const CITIZEN_HIDDEN_FIELDS = '-imageHash -imageHashBands -imageScore -textScore -fusionScore -flags -reviewedBy';
+const CITIZEN_HIDDEN_FIELDS = '-imageHash -imageHashBands -imageScore -textScore -fusionScore -aiReason -flags -reviewedBy';
 
 const fail = (res, status, code, message, extra = {}) =>
   res.status(status).json({ success: false, code, message, ...extra });
@@ -41,7 +41,7 @@ export function listCategories(_req, res) {
 /**
  * Citizen registers a complaint (multipart: image, category, description, lat?, lng?, locationSource?).
  * Pipeline: location (EXIF -> browser GPS / map pin) -> geofence -> daily rate limit ->
- * CLIP validation -> duplicate check -> route to department or hold for admin review.
+ * AI validation (Gemini) -> duplicate check -> route to department or hold for admin review.
  */
 export async function createComplaint(req, res, next) {
   let savedKey = null;
@@ -58,6 +58,12 @@ export async function createComplaint(req, res, next) {
     if (!file) return fail(res, 400, 'NO_IMAGE', 'A photo of the problem is required.');
     const imageType = sniffImageType(file.buffer);
     if (!imageType) return fail(res, 400, 'BAD_IMAGE', 'The uploaded file is not a valid JPEG, PNG or WebP image.');
+    let photo;
+    try {
+      photo = await prepareImage(file.buffer);
+    } catch {
+      return fail(res, 400, 'BAD_IMAGE', 'The uploaded file is not a valid image.');
+    }
 
     // 1. Location: photo EXIF GPS -> browser GPS / manual map pin -> ask the client to pin it
     let loc = await gpsFromExif(file.buffer);
@@ -94,12 +100,11 @@ export async function createComplaint(req, res, next) {
     if (recent >= cfg.dailyLimit) {
       flags.push('rate_limited');
     } else {
-      // 4. CLIP validation. If the ML service is down the complaint goes to the admin queue instead of being lost.
+      // 4. AI validation (Gemini). If it is unavailable the complaint goes to the admin queue instead of being lost.
       try {
-        result = await validateComplaint({ buffer: file.buffer, mimetype: imageType, text: description, category });
+        result = await validateComplaint({ jpeg: photo.jpeg, text: description, category });
       } catch (err) {
-        if (err.status === 400) return fail(res, 400, 'BAD_IMAGE', 'The uploaded file is not a valid image.');
-        console.error('[complaints] ML validation unavailable:', err.message);
+        console.error('[complaints] AI validation unavailable:', err.message);
         flags.push('ml_unavailable');
       }
 
@@ -107,9 +112,9 @@ export async function createComplaint(req, res, next) {
         if (!result.image_match) flags.push('image_mismatch');
         if (!result.text_match) flags.push('text_mismatch');
         if (!result.valid && result.image_match && result.text_match) flags.push('low_confidence');
-        // 5. Duplicate image detection (perceptual hash)
-        if (await isDuplicateImage(result.phash)) flags.push('duplicate_image');
       }
+      // 5. Duplicate image detection (perceptual hash, computed locally so it runs even without the AI check)
+      if (await isDuplicateImage(photo.phash)) flags.push('duplicate_image');
     }
 
     // 6./7. Decision: all checks passed -> routed to the department, otherwise -> admin queue
@@ -126,13 +131,14 @@ export async function createComplaint(req, res, next) {
       department: routed ? department : null,
       description,
       imageUrl: image.url,
-      imageHash: result ? result.phash : null,
-      imageHashBands: result ? hashBands(result.phash) : undefined,
+      imageHash: photo.phash,
+      imageHashBands: hashBands(photo.phash),
       location: { type: 'Point', coordinates: [loc.lng, loc.lat] },
       locationSource: source,
       imageScore: result?.image_score,
       textScore: result?.text_score,
       fusionScore: result?.fusion_score,
+      aiReason: result?.reason || undefined,
       flags,
       status,
       statusHistory: [

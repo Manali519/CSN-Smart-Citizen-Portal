@@ -1,9 +1,9 @@
 import { Router } from 'express';
-import rateLimit from 'express-rate-limit';
 import { body } from 'express-validator';
 import { adminLogin, adminLogout, getAdminProfile, getAdminStats } from '../controllers/adminController.js';
 import { handleValidation } from '../middleware/validators.js';
 import { requireStaff } from '../middleware/requireStaff.js';
+import { limitBy, byEmail } from '../middleware/rateLimits.js';
 
 const router = Router();
 
@@ -13,12 +13,10 @@ const adminLoginRules = [
   body('password').isString().notEmpty().withMessage('Password is required'),
 ];
 
-const loginLimiter = rateLimit({
+const loginLimiter = limitBy(byEmail, {
   windowMs: 15 * 60 * 1000,
   limit: 15,
-  standardHeaders: true,
-  legacyHeaders: false,
-  message: { success: false, message: 'Too many login attempts. Please try again later.' },
+  message: 'Too many login attempts. Please try again later.',
 });
 
 router.post('/login', loginLimiter, adminLoginRules, handleValidation, adminLogin);

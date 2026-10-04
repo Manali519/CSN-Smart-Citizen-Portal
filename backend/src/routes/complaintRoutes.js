@@ -1,5 +1,4 @@
 import { Router } from 'express';
-import rateLimit from 'express-rate-limit';
 import {
   listCategories,
   createComplaint,
@@ -13,18 +12,16 @@ import { requireAuth } from '../middleware/requireAuth.js';
 import { requireStaff } from '../middleware/requireStaff.js';
 import { uploadComplaintImage, uploadProofImage } from '../middleware/upload.js';
 import { complaintFeedbackValidationRules, handleValidation } from '../middleware/validators.js';
+import { limitBy, byUser } from '../middleware/rateLimits.js';
 
 const router = Router();
 
 // Short-window cap per citizen. The daily limit is checked per request, so this also stops a burst of
 // parallel submissions from slipping past it before any of them is saved.
-const submitLimiter = rateLimit({
+const submitLimiter = limitBy(byUser, {
   windowMs: 60 * 1000,
   limit: 5,
-  keyGenerator: (req) => String(req.user._id),
-  standardHeaders: true,
-  legacyHeaders: false,
-  message: { success: false, code: 'RATE_LIMITED', message: 'Too many complaints at once. Please wait a minute.' },
+  message: 'Too many complaints at once. Please wait a minute.',
 });
 
 router.get('/categories', listCategories);

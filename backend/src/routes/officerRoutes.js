@@ -1,5 +1,4 @@
 import { Router } from 'express';
-import rateLimit from 'express-rate-limit';
 import {
   officerLogin,
   officerLogout,
@@ -10,15 +9,14 @@ import {
 } from '../controllers/officerController.js';
 import { requireAuth } from '../middleware/requireAuth.js';
 import { requireStaff } from '../middleware/requireStaff.js';
+import { limitBy } from '../middleware/rateLimits.js';
 
 const router = Router();
 
-const loginLimiter = rateLimit({
+const loginLimiter = limitBy((req) => req.body?.officerId, {
   windowMs: 15 * 60 * 1000,
   limit: 15,
-  standardHeaders: true,
-  legacyHeaders: false,
-  message: { success: false, message: 'Too many login attempts. Please try again later.' },
+  message: 'Too many login attempts. Please try again later.',
 });
 
 router.post('/login', loginLimiter, officerLogin);

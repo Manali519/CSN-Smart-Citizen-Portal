@@ -1,9 +1,0 @@
-fastapi>=0.118,<1
-uvicorn>=0.37,<1
-python-multipart>=0.0.20
-torch>=2.9,<3
-torchvision>=0.24,<1
-open_clip_torch>=3.2,<4
-pillow>=11.3
-imagehash>=4.3.2
-numpy>=2.3

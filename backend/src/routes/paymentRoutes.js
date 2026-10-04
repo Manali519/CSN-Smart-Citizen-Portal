@@ -1,5 +1,4 @@
 import { Router } from 'express';
-import rateLimit from 'express-rate-limit';
 import { body } from 'express-validator';
 import {
   requireRazorpay,
@@ -10,15 +9,14 @@ import {
 } from '../controllers/paymentController.js';
 import { requireAuth } from '../middleware/requireAuth.js';
 import { handleValidation } from '../middleware/validators.js';
+import { limitBy, byUser } from '../middleware/rateLimits.js';
 
 const router = Router();
 
-const orderLimiter = rateLimit({
+const orderLimiter = limitBy(byUser, {
   windowMs: 15 * 60 * 1000,
   limit: 30,
-  standardHeaders: true,
-  legacyHeaders: false,
-  message: { success: false, message: 'Too many payment attempts. Please try again later.' },
+  message: 'Too many payment attempts. Please try again later.',
 });
 
 router.use(requireAuth, requireRazorpay);

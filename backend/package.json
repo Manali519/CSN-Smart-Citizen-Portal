@@ -1,14 +1,15 @@
 {
   "name": "backend",
   "version": "1.0.0",
-  "description": "",
+  "private": true,
+  "description": "Smart City Portal API (Express) - runs as a Vercel Function via api/index.js",
   "main": "src/server.js",
   "scripts": {
-    "start": "node src/server.js",
-    "dev": "node --watch src/server.js",
+    "start": "node --env-file-if-exists=.env src/server.js",
+    "dev": "node --env-file-if-exists=.env --watch src/server.js",
     "test": "node --test",
-    "create-admin": "node scripts/createAdmin.js",
-    "create-officer": "node scripts/createOfficer.js"
+    "create-admin": "node --env-file-if-exists=.env scripts/createAdmin.js",
+    "create-officer": "node --env-file-if-exists=.env scripts/createOfficer.js"
   },
   "keywords": [],
   "author": "",
@@ -18,11 +19,10 @@
     "node": "24.x"
   },
   "dependencies": {
-    "@google-cloud/storage": "^7.22.0",
+    "@vercel/blob": "^2.8.0",
     "bcryptjs": "^3.0.3",
     "cookie-parser": "^1.4.7",
     "cors": "^2.8.6",
-    "dotenv": "^18.0.3",
     "exifr": "^7.1.3",
     "express": "^5.2.1",
     "express-rate-limit": "^8.7.0",
@@ -32,6 +32,8 @@
     "jsonwebtoken": "^9.0.3",
     "mongoose": "^9.10.2",
     "multer": "^2.4.0",
-    "nodemailer": "^10.0.13"
+    "nodemailer": "^10.0.13",
+    "sharp": "^0.35.5",
+    "validator": "^13.15.35"
   }
 }

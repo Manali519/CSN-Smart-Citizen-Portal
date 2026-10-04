@@ -26,7 +26,7 @@ export const OFFICER_OPEN_STATUSES = ['Pending Review', 'In Progress', 'Reopened
 /**
  * Complaint
  * Citizen raises (category + photo + description) -> automatic checks (location, geofence,
- * rate limit, CLIP, duplicate) -> routed to a department or held for admin review ->
+ * rate limit, AI check, duplicate) -> routed to a department or held for admin review ->
  * officer acts -> citizen responds with feedback.
  */
 const complaintSchema = new mongoose.Schema(
@@ -49,10 +49,11 @@ const complaintSchema = new mongoose.Schema(
     },
     locationSource: { type: String, enum: ['exif', 'gps', 'manual'], required: true },
 
-    // CLIP scores (absent when the ML service was unavailable)
+    // AI (Gemini) scores (absent when the AI check was unavailable)
     imageScore: Number,
     textScore: Number,
     fusionScore: Number,
+    aiReason: { type: String, maxlength: 300 }, // Gemini's one-line explanation, shown to admins
     flags: [{ type: String, enum: COMPLAINT_FLAGS }],
 
     status: { type: String, enum: COMPLAINT_STATUSES, default: 'Pending Review' },
