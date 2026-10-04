@@ -1,3 +1,3 @@
-# Cloud Run deploy settings (contain secrets) and generated env files
-deploy/cloudrun.env
-deploy/.*.yaml
+# Local tooling output
+.vercel
+node_modules/
