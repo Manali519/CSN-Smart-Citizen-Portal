@@ -31,7 +31,7 @@ export const env = {
   port: Number(process.env.PORT || 5000),
   clientOrigins: (process.env.CLIENT_ORIGINS || 'http://localhost:3000')
     .split(',')
-    .map((o) => o.trim())
+    .map((o) => o.trim().replace(/\/+$/, '')) // browsers send the Origin without a trailing slash
     .filter(Boolean),
 
   mongodbUri: required('MONGODB_URI'),
