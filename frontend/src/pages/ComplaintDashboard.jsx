@@ -10,7 +10,7 @@ import './ComplaintDashboard.css';
 
 // Verified complaints are handled by officers only; admins see what the automatic checks held back.
 const TABS = {
-  officer: ['Pending Review', 'Resolved'],
+  officer: ['Pending Review', 'Resolved', 'Closed'],
   admin: ['Suspected Fake', 'Rejected'],
 };
 
@@ -30,7 +30,7 @@ const LOCATION_SOURCES = { exif: 'photo GPS', gps: 'device GPS', manual: 'map pi
 /** Officer display info saved at login (the session itself is the httpOnly cookie). */
 function officerIdentity() {
   try {
-    const session = JSON.parse(localStorage.getItem('officer_session'));
+    const session = JSON.parse(sessionStorage.getItem('officer_session'));
     return session && { name: session.department, subtitle: `Officer ID: ${session.officerId}` };
   } catch {
     return null;
@@ -45,7 +45,9 @@ const initials = (name = '') =>
     .map((word) => word[0].toUpperCase())
     .join('');
 
-/** Officer marks a complaint complete, with optional remarks and an optional proof photo. */
+const MIN_REMARKS = 10;
+
+/** Officer marks a complaint complete; a resolution description and a proof photo are both required. */
 function ResolveForm({ complaint, onDone, onCancel }) {
   const [remarks, setRemarks] = useState('');
   const [proof, setProof] = useState(null);
@@ -54,6 +56,14 @@ function ResolveForm({ complaint, onDone, onCancel }) {
 
   async function submit(e) {
     e.preventDefault();
+    if (remarks.trim().length < MIN_REMARKS) {
+      setError(`Describe the resolution in at least ${MIN_REMARKS} characters.`);
+      return;
+    }
+    if (!proof) {
+      setError('Upload a photo of the resolved issue.');
+      return;
+    }
     setBusy(true);
     setError('');
     try {
@@ -68,13 +78,21 @@ function ResolveForm({ complaint, onDone, onCancel }) {
   return (
     <form className="cq-resolve" onSubmit={submit}>
       <label className="cq-field">
-        <span>Action taken (optional)</span>
-        <textarea rows={2} maxLength={1000} value={remarks} onChange={(e) => setRemarks(e.target.value)} />
+        <span>Resolution description (required, shown to the citizen)</span>
+        <textarea
+          rows={3}
+          required
+          minLength={MIN_REMARKS}
+          maxLength={1000}
+          value={remarks}
+          onChange={(e) => setRemarks(e.target.value)}
+        />
       </label>
       <label className="cq-field">
-        <span>Proof photo (optional)</span>
+        <span>Resolution photo (required)</span>
         <input
           type="file"
+          required
           accept="image/jpeg,image/png,image/webp"
           onChange={(e) => {
             const file = e.target.files[0] || null;
@@ -87,7 +105,7 @@ function ResolveForm({ complaint, onDone, onCancel }) {
       </label>
       {error && <p className="cq-error" role="alert">{error}</p>}
       <div className="cq-resolve-actions">
-        <button type="submit" className="cq-btn cq-approve" disabled={busy}>
+        <button type="submit" className="cq-btn cq-approve" disabled={busy || !proof || remarks.trim().length < MIN_REMARKS}>
           {busy ? 'Saving…' : 'Confirm complete'}
         </button>
         <button type="button" className="cq-btn cq-btn-muted" onClick={onCancel} disabled={busy}>
@@ -163,7 +181,7 @@ export default function ComplaintDashboard({ role }) {
     } catch {
       // ignore
     }
-    if (role === 'officer') localStorage.removeItem('officer_session');
+    if (role === 'officer') sessionStorage.removeItem('officer_session');
     navigate(loginPath);
   }
 
@@ -289,6 +307,7 @@ export default function ComplaintDashboard({ role }) {
                     <span>
                       {c.userFeedback?.rating ? `Citizen rating: ${'★'.repeat(c.userFeedback.rating)} (${c.userFeedback.rating}/5)` : 'Awaiting citizen rating'}
                     </span>
+                    {c.userFeedback?.comment && <p className="cq-text">Citizen: “{c.userFeedback.comment}”</p>}
                   </div>
                 )}
                 {resolvingId === c._id && (

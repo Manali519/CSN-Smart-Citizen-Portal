@@ -14,7 +14,7 @@ export default function OfficerDashboard() {
   // Display info only; the server authorises requests with the httpOnly session cookie.
   const [officerSession] = useState(() => {
     try {
-      const saved = localStorage.getItem('officer_session');
+      const saved = sessionStorage.getItem('officer_session');
       return saved ? JSON.parse(saved) : null;
     } catch {
       return null;
@@ -39,7 +39,7 @@ export default function OfficerDashboard() {
       setRequests(res.requests || []);
     } catch (err) {
       if (err.status === 401 || err.status === 403) {
-        localStorage.removeItem('officer_session');
+        sessionStorage.removeItem('officer_session');
         navigate('/officer-login');
         return;
       }
@@ -116,7 +116,7 @@ export default function OfficerDashboard() {
     } catch {
       // ignore
     }
-    localStorage.removeItem('officer_session');
+    sessionStorage.removeItem('officer_session');
     navigate('/officer-login');
   };
 

@@ -25,11 +25,11 @@ export function fetchComplaintQueue({ status, limit = 200 } = {}) {
   return apiRequest(`/api/complaints/queue?${params}`, { method: 'GET' });
 }
 
-/** Officer marks a complaint complete; remarks and proof photo are optional. */
+/** Officer marks a complaint complete; remarks (shown to the citizen) and a proof photo are required. */
 export function resolveComplaint(complaintId, { remarks, proof }) {
   const fd = new FormData();
-  if (remarks) fd.append('remarks', remarks);
-  if (proof) fd.append('proof', proof);
+  fd.append('remarks', remarks);
+  fd.append('proof', proof);
   return apiRequest(`/api/complaints/${complaintId}/resolve`, { method: 'PATCH', body: fd });
 }
 

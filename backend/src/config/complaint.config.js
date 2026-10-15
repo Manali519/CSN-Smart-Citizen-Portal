@@ -1,5 +1,6 @@
 import { fileURLToPath } from 'url';
 import { MAX_HAMMING_DISTANCE } from '../utils/phash.js';
+import './env.js'; // loads backend/.env before the variables below are read
 
 const num = (v, d) => (v === undefined || v === '' || Number.isNaN(Number(v)) ? d : Number(v));
 

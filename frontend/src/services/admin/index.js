@@ -1,7 +1,10 @@
 import { apiRequest } from '../../api/client.js';
+import { startTabSession, endTabSession } from '../../api/portalSession.js';
 
-export function adminLoginApi({ email, password }) {
-  return apiRequest('/api/admin/login', { method: 'POST', body: { email, password } });
+export async function adminLoginApi({ email, password }) {
+  const res = await apiRequest('/api/admin/login', { method: 'POST', body: { email, password } });
+  if (res?.success) startTabSession('admin', res.admin?.id);
+  return res;
 }
 
 export function fetchAdminProfile() {
@@ -16,5 +19,6 @@ export function fetchAdminStats({ weeks, rating }) {
 }
 
 export function adminLogoutApi() {
+  endTabSession();
   return apiRequest('/api/admin/logout', { method: 'POST' });
 }

@@ -48,7 +48,7 @@ export default function OfficerLogin() {
           officerName: res.officer?.officerName || `${resolvedDept} Officer`,
           department: res.officer?.department || resolvedDept,
         };
-        localStorage.setItem('officer_session', JSON.stringify(session));
+        sessionStorage.setItem('officer_session', JSON.stringify(session));
         setLoading(false);
         navigate('/officer/dashboard');
       })

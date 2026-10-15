@@ -1,11 +1,19 @@
 import { apiRequest } from './client.js';
+import { startTabSession, endTabSession } from './portalSession.js';
+
+/** Binds this tab to the citizen whose sign-in just succeeded. */
+async function citizenSignIn(request) {
+  const res = await request;
+  if (res?.user?.id) startTabSession('citizen', res.user.id);
+  return res;
+}
 
 export function registerCitizen(payload) {
   return apiRequest('/api/auth/register', { body: payload });
 }
 
 export function verifyRegistrationOtp({ email, otp }) {
-  return apiRequest('/api/auth/register/verify-otp', { body: { email, otp } });
+  return citizenSignIn(apiRequest('/api/auth/register/verify-otp', { body: { email, otp } }));
 }
 
 export function resendRegistrationOtp({ email }) {
@@ -13,11 +21,11 @@ export function resendRegistrationOtp({ email }) {
 }
 
 export function loginWithPassword({ email, password }) {
-  return apiRequest('/api/auth/login', { body: { email, password } });
+  return citizenSignIn(apiRequest('/api/auth/login', { body: { email, password } }));
 }
 
 export function loginWithGoogle({ googleIdToken }) {
-  return apiRequest('/api/auth/login/google', { body: { googleIdToken } });
+  return citizenSignIn(apiRequest('/api/auth/login/google', { body: { googleIdToken } }));
 }
 
 export function getCurrentUser() {
@@ -29,5 +37,6 @@ export function completeProfile(payload) {
 }
 
 export function logout() {
+  endTabSession();
   return apiRequest('/api/auth/logout', { method: 'POST' });
 }

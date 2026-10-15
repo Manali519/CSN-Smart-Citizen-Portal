@@ -1,13 +1,17 @@
 import { apiRequest } from '../../api/client.js';
+import { startTabSession, endTabSession } from '../../api/portalSession.js';
 
-export function officerLoginApi(payload) {
-  return apiRequest('/api/officer/login', {
+export async function officerLoginApi(payload) {
+  const res = await apiRequest('/api/officer/login', {
     method: 'POST',
     body: payload,
   });
+  if (res?.success) startTabSession('officer', res.officer?.officerId);
+  return res;
 }
 
 export function officerLogoutApi() {
+  endTabSession();
   return apiRequest('/api/officer/logout', { method: 'POST' });
 }
 

@@ -1,5 +1,11 @@
-// Environment comes from the Vercel project settings in production and from backend/.env locally
-// (loaded by `node --env-file-if-exists=.env` in the npm scripts).
+import { existsSync } from 'node:fs';
+import { fileURLToPath } from 'node:url';
+
+// Environment comes from the Vercel project settings in production and from backend/.env locally.
+// backend/.env is loaded by absolute path, so it is found whatever folder the server is started from (backend/,
+// the project root, an IDE run button). Variables already set (Vercel settings, the shell) are not overwritten.
+const envFile = fileURLToPath(new URL('../../.env', import.meta.url));
+if (!process.env.VERCEL && existsSync(envFile)) process.loadEnvFile(envFile);
 
 // Values pasted into the Vercel dashboard often keep the quotes or a trailing newline from a .env file.
 const clean = (value) => value?.trim().replace(/^(['"])(.*)\1$/, '$2').trim();

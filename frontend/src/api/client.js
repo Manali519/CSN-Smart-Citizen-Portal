@@ -1,3 +1,5 @@
+import { portalHeaders, handleSessionSwitched } from './portalSession.js';
+
 // Empty in production: Vercel proxies /api to the backend Vercel project (frontend/vercel.json).
 export const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || '';
 
@@ -12,7 +14,7 @@ export async function apiRequest(path, { method = 'POST', body } = {}) {
   const isForm = body instanceof FormData;
   const res = await fetch(`${API_BASE_URL}${path}`, {
     method,
-    headers: isForm ? undefined : { 'Content-Type': 'application/json' },
+    headers: isForm ? portalHeaders() : { 'Content-Type': 'application/json', ...portalHeaders() },
     credentials: 'include', // send/receive the httpOnly session cookie
     body: isForm ? body : body ? JSON.stringify(body) : undefined,
   });
@@ -25,6 +27,7 @@ export async function apiRequest(path, { method = 'POST', body } = {}) {
   }
 
   if (!res.ok) {
+    if (data?.code === 'SESSION_SWITCHED') handleSessionSwitched();
     const message = data?.message || `Request failed (${res.status})`;
     const error = new Error(message);
     error.status = res.status;

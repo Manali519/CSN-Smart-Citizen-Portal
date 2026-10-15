@@ -350,6 +350,32 @@
   padding: 0 1px;
 }
 
+.star-btn {
+  opacity: 0.35;
+}
+
+.star-btn.star-active,
+.star-btn:hover {
+  opacity: 1;
+}
+
+.feedback-comment {
+  display: block;
+  width: 100%;
+  max-width: 420px;
+  margin-top: 8px;
+  padding: 6px 8px;
+  font: inherit;
+  font-size: 0.85rem;
+  border: 1px solid var(--line, #d6d3d1);
+  border-radius: 6px;
+  resize: vertical;
+}
+
+.feedback-submit {
+  margin-top: 8px;
+}
+
 .feedback-given {
   margin-top: 8px;
   font-size: 0.85rem !important;

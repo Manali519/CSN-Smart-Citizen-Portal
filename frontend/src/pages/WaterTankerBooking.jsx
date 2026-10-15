@@ -150,11 +150,22 @@ const DEFAULT_ADDONS = [
   { id: 'tds_meter_test', name: 'Digital TDS & Purity Test on Arrival', price: 49, description: 'Driver tests TDS & pH in front of you with digital meter' },
 ];
 
+// Mirrors backend/src/utils/tankerData.js (the API's list replaces it on load): drinking water costs more,
+// raw construction water costs less than the domestic-utility fleet rate.
+const DEFAULT_GRADES = [
+  { id: 'potable_ro', label: 'Potable RO + UV Purified (Drinking Grade)', priceMultiplier: 1.35 },
+  { id: 'domestic_utility', label: 'Domestic Filtered Utility', priceMultiplier: 1 },
+  { id: 'construction_raw', label: 'Construction & Industrial Bulk Raw', priceMultiplier: 0.6 },
+];
+
+const gradedPrice = (fleetPrice, grade) => Math.round(fleetPrice * (grade?.priceMultiplier ?? 1));
+
 export default function WaterTankerBooking() {
   const { user } = useAuth();
 
   const [sources, setSources] = useState(DEFAULT_SOURCES);
   const [addonsList, setAddonsList] = useState(DEFAULT_ADDONS);
+  const [grades, setGrades] = useState(DEFAULT_GRADES);
   const [loading, setLoading] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [activeFilter, setActiveFilter] = useState('all');
@@ -207,6 +218,7 @@ export default function WaterTankerBooking() {
       .then((res) => {
         if (res.sources?.length) setSources(res.sources);
         if (res.addons?.length) setAddonsList(res.addons);
+        if (res.grades?.length) setGrades(res.grades);
       })
       .catch(() => {
         // Fallback to rich embedded defaults
@@ -245,11 +257,21 @@ export default function WaterTankerBooking() {
     setSelectedSource(null);
   }
 
-  // Calculate pricing inside customizer
+  const selectedGrade = grades.find((g) => g.id === selectedQuality) || grades[0];
+
+  /** Tanker price at a grade for the selected quantity, e.g. "₹2,024 for 5,000L". */
+  function gradePriceHint(gradeId) {
+    const fleetItem = selectedSource?.tankerFleet.find((f) => f.capacity === selectedQuantity);
+    const grade = grades.find((g) => g.id === gradeId);
+    if (!fleetItem || !grade) return null;
+    return `₹${gradedPrice(fleetItem.price, grade).toLocaleString()} for ${fleetItem.capacity.toLocaleString()}L`;
+  }
+
+  // Calculate pricing inside customizer (the tanker price depends on the selected water grade)
   const activeCustomizerPrice = useMemo(() => {
     if (!selectedSource) return { base: 0, addons: 0, delivery: 0, tax: 0, total: 0 };
     const fleetItem = selectedSource.tankerFleet.find((f) => f.capacity === selectedQuantity) || selectedSource.tankerFleet[0];
-    const base = fleetItem ? fleetItem.price : 449;
+    const base = gradedPrice(fleetItem ? fleetItem.price : 449, selectedGrade);
     const addons = addonsList
       .filter((a) => selectedAddons.includes(a.id))
       .reduce((sum, a) => sum + a.price, 0);
@@ -258,7 +280,7 @@ export default function WaterTankerBooking() {
     const tax = Math.round((base + addons + delivery + service) * 0.05);
     const total = base + addons + delivery + service + tax;
     return { base, addons, delivery, service, tax, total };
-  }, [selectedSource, selectedQuantity, selectedAddons, addonsList]);
+  }, [selectedSource, selectedQuantity, selectedAddons, addonsList, selectedGrade]);
 
   // Add to cart
   function handleAddToCart() {
@@ -276,7 +298,7 @@ export default function WaterTankerBooking() {
       etaMinutes: selectedSource.etaMinutes,
       quantity: selectedQuantity,
       qualityGrade: selectedQuality,
-      qualityLabel: selectedSource.waterQuality.label,
+      qualityLabel: selectedGrade.label,
       tds: selectedSource.waterQuality.tds,
       ph: selectedSource.waterQuality.ph,
       certification: selectedSource.waterQuality.certification,
@@ -569,7 +591,7 @@ export default function WaterTankerBooking() {
                         </div>
                         <div className="qty-capacity">{fleet.capacity.toLocaleString()} Litres</div>
                         <div className="qty-type">{fleet.type}</div>
-                        <div className="qty-price">₹{fleet.price}</div>
+                        <div className="qty-price">₹{gradedPrice(fleet.price, selectedGrade)}</div>
                       </button>
                     );
                   })}
@@ -593,6 +615,7 @@ export default function WaterTankerBooking() {
                     <div className="quality-text">
                       <strong>🌟 Potable RO + UV Purified (Drinking Grade)</strong>
                       <p>Multi-stage treated, TDS: {selectedSource.waterQuality.tds} ppm, pH: {selectedSource.waterQuality.ph}. BIS 10500 certified.</p>
+                      <span className="quality-price">{gradePriceHint('potable_ro')}</span>
                     </div>
                   </label>
 
@@ -606,6 +629,7 @@ export default function WaterTankerBooking() {
                     <div className="quality-text">
                       <strong>💧 Domestic Filtered Utility</strong>
                       <p>Ideal for household chores, overhead tank refills, cooking, bathing and laundry.</p>
+                      <span className="quality-price">{gradePriceHint('domestic_utility')}</span>
                     </div>
                   </label>
 
@@ -619,6 +643,7 @@ export default function WaterTankerBooking() {
                     <div className="quality-text">
                       <strong>🏗️ Construction &amp; Industrial Bulk Raw</strong>
                       <p>High-volume water for curing, landscaping, road works and industrial processing.</p>
+                      <span className="quality-price">{gradePriceHint('construction_raw')}</span>
                     </div>
                   </label>
                 </div>
@@ -922,7 +947,6 @@ export default function WaterTankerBooking() {
                               />
                             </div>
                           </div>
-                          <span className="upi-secure-badge">🔒 256-bit Encrypted CSMC Municipal Gateway</span>
                         </div>
                       )}
                     </div>
@@ -990,14 +1014,6 @@ export default function WaterTankerBooking() {
               <div className="detail-line">
                 <span>Source:</span>
                 <strong>{orderConfirmed.waterSource?.name}</strong>
-              </div>
-              <div className="detail-line">
-                <span>Assigned Tanker:</span>
-                <strong>{orderConfirmed.driver?.vehicleNo} ({orderConfirmed.driver?.name})</strong>
-              </div>
-              <div className="detail-line">
-                <span>ETA:</span>
-                <strong>Arriving in {orderConfirmed.tracking?.etaMinutes || 25} mins</strong>
               </div>
               <div className="detail-line">
                 <span>Payment:</span>

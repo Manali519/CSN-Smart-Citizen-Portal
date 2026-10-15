@@ -1,3 +1,10 @@
-# Local tooling output
-.vercel
+# Dependencies and local tooling
 node_modules/
+.vercel
+
+# Secrets: environment files, keys and local HTTPS certificates (frontend/certs)
+.env
+.env.*
+*.pem
+*.key
+certs/

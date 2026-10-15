@@ -1,6 +1,7 @@
 import React, { useEffect, useState, useCallback, useMemo } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import { getCurrentUser, logout, completeProfile } from '../api/auth.js';
+import { getCurrentUser, completeProfile } from '../api/auth.js';
+import { useAuth } from '../context/AuthContext.jsx';
 import { fetchMyComplaints, submitComplaintFeedback } from '../services/complaints/index.js';
 import { fetchMyRequests } from '../api/requests.js';
 import { fetchMyTankerBookings, fetchMyGarbageBookings } from '../services/bookings/index.js';
@@ -39,6 +40,7 @@ const EMPTY_PROFILE_FORM = {
 
 export default function Dashboard() {
   const navigate = useNavigate();
+  const { logout } = useAuth();
 
   const [user, setUser] = useState(null);
   const [authLoading, setAuthLoading] = useState(true);
@@ -54,6 +56,9 @@ export default function Dashboard() {
   const [complaintsLoading, setComplaintsLoading] = useState(true);
   const [tab, setTab] = useState('all');
   const [feedbackError, setFeedbackError] = useState('');
+  // Per-complaint draft rating/comment until the citizen submits and closes it.
+  const [feedbackDrafts, setFeedbackDrafts] = useState({});
+  const [feedbackBusyId, setFeedbackBusyId] = useState(null);
 
   const [requests, setRequests] = useState([]);
   const [requestsLoading, setRequestsLoading] = useState(true);
@@ -147,7 +152,7 @@ export default function Dashboard() {
   const showProfileCard = isProfileOpen && (activeNav === 'profile' || profileIncomplete || activeNav === 'overview');
 
   async function handleLogout() {
-    try { await logout(); } catch { /* ignore */ }
+    await logout();
     navigate('/');
   }
 
@@ -176,13 +181,30 @@ export default function Dashboard() {
     }
   }
 
-  async function handleFeedback(complaintId, rating) {
+  function updateFeedbackDraft(complaintId, patch) {
+    setFeedbackDrafts((prev) => ({ ...prev, [complaintId]: { ...prev[complaintId], ...patch } }));
+  }
+
+  async function handleFeedback(complaintId) {
+    const draft = feedbackDrafts[complaintId] || {};
+    if (!draft.rating) {
+      setFeedbackError('Select a star rating before closing the complaint.');
+      return;
+    }
     setFeedbackError('');
+    setFeedbackBusyId(complaintId);
     try {
-      await submitComplaintFeedback(complaintId, { rating });
+      await submitComplaintFeedback(complaintId, { rating: draft.rating, comment: draft.comment?.trim() || undefined });
+      setFeedbackDrafts((prev) => {
+        const next = { ...prev };
+        delete next[complaintId];
+        return next;
+      });
       loadComplaints();
     } catch (err) {
       setFeedbackError(err.message || 'Could not save your rating. Please try again.');
+    } finally {
+      setFeedbackBusyId(null);
     }
   }
 
@@ -288,14 +310,31 @@ export default function Dashboard() {
                     <button
                       key={n}
                       type="button"
-                      className="star-btn"
+                      className={`star-btn ${n <= (feedbackDrafts[c._id]?.rating || 0) ? 'star-active' : ''}`}
                       aria-label={`Rate ${n} out of 5`}
-                      onClick={() => handleFeedback(c._id, n)}
+                      aria-pressed={feedbackDrafts[c._id]?.rating === n}
+                      onClick={() => updateFeedbackDraft(c._id, { rating: n })}
                     >
                       &#9733;
                     </button>
                   ))}
                 </div>
+                <textarea
+                  className="feedback-comment"
+                  rows={2}
+                  maxLength={500}
+                  placeholder="Comments on the resolution (optional)"
+                  value={feedbackDrafts[c._id]?.comment || ''}
+                  onChange={(e) => updateFeedbackDraft(c._id, { comment: e.target.value })}
+                />
+                <button
+                  type="button"
+                  className="btn btn-primary feedback-submit"
+                  disabled={!feedbackDrafts[c._id]?.rating || feedbackBusyId === c._id}
+                  onClick={() => handleFeedback(c._id)}
+                >
+                  {feedbackBusyId === c._id ? 'Closing…' : 'Rate & close complaint'}
+                </button>
               </div>
             </div>
           ))}
@@ -421,11 +460,22 @@ export default function Dashboard() {
                           {c.resolution?.solutionGiven && (
                             <p className="complaint-location">Officer: {c.resolution.solutionGiven}</p>
                           )}
+                          {c.resolution?.afterPhotos?.length > 0 && (
+                            <div className="notif-proof-row">
+                              {c.resolution.afterPhotos.map((url) => (
+                                <a key={url} href={assetUrl(url)} target="_blank" rel="noreferrer">
+                                  <img src={assetUrl(url)} alt="Resolution photo from the officer" className="notif-proof" />
+                                </a>
+                              ))}
+                            </div>
+                          )}
                           {c.status === 'Resolved' && !c.userFeedback?.rating && (
                             <p className="complaint-location">Resolved. Please rate it in the notification above.</p>
                           )}
                           {c.userFeedback?.rating && (
-                            <p className="feedback-given">You rated this {c.userFeedback.rating}/5.</p>
+                            <p className="feedback-given">
+                              You rated this {c.userFeedback.rating}/5{c.status === 'Closed' ? ' and closed the complaint' : ''}.
+                            </p>
                           )}
                         </li>
                       ))}

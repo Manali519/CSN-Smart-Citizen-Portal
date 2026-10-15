@@ -2,6 +2,7 @@ import React, { Suspense, lazy } from 'react';
 import { Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import Navbar from './components/Navbar.jsx';
 import RequireCitizen from './components/RequireCitizen.jsx';
+import RequireStaff from './components/RequireStaff.jsx';
 import UtilityTicker from './components/UtilityTicker.jsx';
 import ContactUs from './components/ContactUs.jsx';
 import Footer from './components/Footer.jsx';
@@ -46,11 +47,12 @@ const PaymentTest = lazy(() => import('./pages/PaymentTest.jsx'));
 const LiveHeatmap = lazy(() => import('./pages/CityInsights.jsx').then((m) => ({ default: m.LiveHeatmap })));
 const CityAnalytics = lazy(() => import('./pages/CityInsights.jsx').then((m) => ({ default: m.CityAnalytics })));
 
+// Each staff page opens only in a tab signed in with that role (see api/portalSession.js).
 const STAFF_ROUTES = [
-  { path: '/officer-dashboard', element: <OfficerDashboard /> },
-  { path: '/officer/dashboard', element: <OfficerDashboard /> },
-  { path: '/officer/complaints', element: <ComplaintDashboard role="officer" /> },
-  { path: '/admin/complaints', element: <ComplaintDashboard role="admin" /> },
+  { path: '/officer-dashboard', role: 'officer', element: <OfficerDashboard /> },
+  { path: '/officer/dashboard', role: 'officer', element: <OfficerDashboard /> },
+  { path: '/officer/complaints', role: 'officer', element: <ComplaintDashboard role="officer" /> },
+  { path: '/admin/complaints', role: 'admin', element: <ComplaintDashboard role="admin" /> },
 ];
 
 // Citizen services: visitors are sent to login first and brought back afterwards.
@@ -102,8 +104,11 @@ export default function App() {
       <main id="main-content">
         <Suspense fallback={<p className="container section">Loading&hellip;</p>}>
           <Routes>
-            {[...PUBLIC_ROUTES, ...STAFF_ROUTES].map(({ path, element }) => (
+            {PUBLIC_ROUTES.map(({ path, element }) => (
               <Route key={path} path={path} element={element} />
+            ))}
+            {STAFF_ROUTES.map(({ path, role, element }) => (
+              <Route key={path} path={path} element={<RequireStaff role={role}>{element}</RequireStaff>} />
             ))}
             {CITIZEN_ROUTES.map(({ path, element }) => (
               <Route key={path} path={path} element={<RequireCitizen>{element}</RequireCitizen>} />

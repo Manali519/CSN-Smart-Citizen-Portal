@@ -2,6 +2,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useGoogleSignIn, decodeGoogleCredentialForDisplay } from '../hooks/useGoogleSignIn.js';
 import { registerCitizen, verifyRegistrationOtp, resendRegistrationOtp } from '../api/auth.js';
+import { useAuth } from '../context/AuthContext.jsx';
 import './CitizenRegister.css';
 
 const EMPTY_FORM = {
@@ -19,6 +20,7 @@ const RESEND_COOLDOWN_SECONDS = 60; // mirrors the backend's OTP_RESEND_COOLDOWN
 
 export default function CitizenRegister() {
   const navigate = useNavigate();
+  const { refreshUser } = useAuth();
 
   const [form, setForm] = useState(EMPTY_FORM);
   const [signupMethod, setSignupMethod] = useState('manual');
@@ -145,6 +147,7 @@ export default function CitizenRegister() {
     setLoading(true);
     try {
       await verifyRegistrationOtp({ email: otpEmail, otp });
+      await refreshUser();
       navigate('/dashboard', { replace: true });
     } catch (err) {
       setOtpError(err.message);
