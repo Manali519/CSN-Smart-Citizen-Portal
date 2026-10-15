@@ -15,7 +15,7 @@ export async function adminLogin(req, res, next) {
     }
 
     setStaffSession(res, { id: admin._id, role: 'admin' });
-    return res.status(200).json({ success: true, admin: { name: admin.name, email: admin.email } });
+    return res.status(200).json({ success: true, admin: { id: admin._id, name: admin.name, email: admin.email } });
   } catch (err) {
     next(err);
   }
@@ -144,6 +144,6 @@ export async function getAdminStats(req, res, next) {
 }
 
 export function adminLogout(_req, res) {
-  clearStaffSession(res);
+  clearStaffSession(res, 'admin');
   res.status(200).json({ success: true, message: 'Logged out.' });
 }

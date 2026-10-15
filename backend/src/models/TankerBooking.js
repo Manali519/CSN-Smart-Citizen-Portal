@@ -55,15 +55,6 @@ const tankerBookingSchema = new Schema(
       default: 'confirmed',
       index: true,
     },
-    driver: {
-      name: String,
-      phone: String,
-      vehicleNo: String,
-      vehicleModel: String,
-      rating: Number,
-      photo: String,
-    },
-    tracking: { etaMinutes: Number },
   },
   { timestamps: true }
 );

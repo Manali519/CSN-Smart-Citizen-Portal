@@ -1,10 +1,13 @@
 import { verifySessionToken } from '../utils/token.js';
 import { User } from '../models/User.js';
+import { portalTab, sessionSwitched } from './portalTab.js';
 
 export async function requireAuth(req, res, next) {
   try {
+    // A staff tab never acts with the citizen session that may also be open in this browser.
+    const tab = portalTab(req);
     const token = req.cookies?.session;
-    if (!token) {
+    if (!token || (tab.role && tab.role !== 'citizen')) {
       return res.status(401).json({ success: false, message: 'Please log in to continue.' });
     }
 
@@ -16,6 +19,7 @@ export async function requireAuth(req, res, next) {
     }
 
     const payload = verifySessionToken(token);
+    if (tab.subject && tab.subject !== String(payload.sub)) return sessionSwitched(res);
     const user = await User.findById(payload.sub).maxTimeMS(4000);
 
     if (!user || !user.isVerified) {

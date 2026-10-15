@@ -142,36 +142,21 @@ export const WATER_SOURCES = [
   },
 ];
 
+/**
+ * Water grade the citizen selects. Fleet prices are the domestic-utility rate; drinking water costs more
+ * (RO + UV treatment) and raw construction water costs less.
+ */
+export const WATER_GRADES = [
+  { id: 'potable_ro', label: 'Potable RO + UV Purified (Drinking Grade)', priceMultiplier: 1.35 },
+  { id: 'domestic_utility', label: 'Domestic Filtered Utility', priceMultiplier: 1 },
+  { id: 'construction_raw', label: 'Construction & Industrial Bulk Raw', priceMultiplier: 0.6 },
+];
+
+/** Tanker price for a fleet option at the selected water grade. */
+export const gradedPrice = (fleetPrice, grade) => Math.round(fleetPrice * grade.priceMultiplier);
+
 export const AVAILABLE_ADDONS = [
   { id: 'extra_hose', name: '50ft Extended Booster Hose Pipe', price: 99, description: 'Reach 3rd floor overhead tanks without pressure drop' },
   { id: 'express_dispatch', name: 'Express Priority Rush (Within 20 Mins)', price: 149, description: 'Direct queue-jump dispatch with dedicated traffic routing' },
   { id: 'tds_meter_test', name: 'Digital TDS & Purity Test on Arrival', price: 49, description: 'Driver tests TDS & pH in front of you using digital meter' },
 ];
-
-export const DRIVER_FLEET = [
-  {
-    name: 'Ramesh Patil',
-    phone: '+91 98230 45678',
-    vehicleNo: 'MH-20-CZ-4412',
-    vehicleModel: 'Tata LPK 10000L Stainless Steel Tanker',
-    rating: 4.9,
-    photo: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150&auto=format&fit=crop&q=80',
-  },
-  {
-    name: 'Santosh Gaikwad',
-    phone: '+91 94220 98765',
-    vehicleNo: 'MH-20-DE-8821',
-    vehicleModel: 'Ashok Leyland 5000L Ecomet Tanker',
-    rating: 4.8,
-    photo: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=150&auto=format&fit=crop&q=80',
-  },
-  {
-    name: 'Ganesh Shinde',
-    phone: '+91 98901 23456',
-    vehicleNo: 'MH-20-EF-1109',
-    vehicleModel: 'BharatBenz 20000L Multi-Axle Tanker',
-    rating: 4.9,
-    photo: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=150&auto=format&fit=crop&q=80',
-  },
-];
-

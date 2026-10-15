@@ -1,16 +1,19 @@
 // Environment comes from the Vercel project settings in production and from backend/.env locally
 // (loaded by `node --env-file-if-exists=.env` in the npm scripts).
 
-function required(name, fallback = undefined) {
-  const value = process.env[name] ?? fallback;
-  if (value === undefined) {
-    throw new Error(`Missing required environment variable: ${name}. Set it in the Vercel project settings, or copy .env.example to .env for local development.`);
+// Values pasted into the Vercel dashboard often keep the quotes or a trailing newline from a .env file.
+const clean = (value) => value?.trim().replace(/^(['"])(.*)\1$/, '$2').trim();
+
+function required(name) {
+  const value = clean(process.env[name]);
+  if (!value) {
+    throw new Error(`Missing required environment variable: ${name}. Set it in the Vercel project settings (Production environment) and redeploy, or add it to backend/.env for local development.`);
   }
   return value;
 }
 
-// Vercel production deployments (VERCEL_ENV=production) default to production mode.
-const nodeEnv = process.env.NODE_ENV || (process.env.VERCEL_ENV === 'production' ? 'production' : 'development');
+// Vercel production deployments always run in production mode, even if NODE_ENV=development was copied from a local .env.
+const nodeEnv = process.env.VERCEL_ENV === 'production' ? 'production' : process.env.NODE_ENV || 'development';
 const isProd = nodeEnv === 'production';
 
 // The frontend proxies /api to this Vercel project (frontend/vercel.json), so auth cookies are first-party and

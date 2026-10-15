@@ -1,32 +1,35 @@
-import crypto from 'crypto';
 import { TankerBooking } from '../models/TankerBooking.js';
 import { ServiceRequest } from '../models/ServiceRequest.js';
-import { WATER_SOURCES, AVAILABLE_ADDONS, DRIVER_FLEET } from '../utils/tankerData.js';
+import { WATER_SOURCES, WATER_GRADES, AVAILABLE_ADDONS, gradedPrice } from '../utils/tankerData.js';
 import { generateReferenceNo } from '../utils/reference.js';
 
 const SERVICE_FEE = 49;
 const DELIVERY_FEE_PER_KM = 28;
 const TAX_RATE = 0.05;
 
-/** Water sources with their tanker fleets, plus optional add-ons. */
+/** Water sources with their tanker fleets, the water grades with their pricing, plus optional add-ons. */
 export function getWaterSources(_req, res) {
-  res.status(200).json({ success: true, sources: WATER_SOURCES, addons: AVAILABLE_ADDONS });
+  res.status(200).json({ success: true, sources: WATER_SOURCES, grades: WATER_GRADES, addons: AVAILABLE_ADDONS });
 }
 
 /** Creates a water tanker booking. Prices are computed here, never taken from the client. */
 export async function createTankerBooking(req, res, next) {
   try {
-    const { sourceId, quantity, selectedAddonIds = [], deliveryAddress, deliverySlot, paymentMethod } = req.body;
+    const { sourceId, quantity, waterQualityGrade, selectedAddonIds = [], deliveryAddress, deliverySlot, paymentMethod } =
+      req.body;
 
     const source = WATER_SOURCES.find((s) => s.id === sourceId);
     const fleetOption = source?.tankerFleet.find((f) => f.capacity === Number(quantity));
     if (!fleetOption) {
       return res.status(400).json({ success: false, message: 'The selected tanker size is not available at this source.' });
     }
+    // Defaults to the source's own grade for older clients that do not send one.
+    const grade = WATER_GRADES.find((g) => g.id === (waterQualityGrade || source.waterQuality.grade));
+    if (!grade) return res.status(400).json({ success: false, message: 'Select a valid water quality grade.' });
 
     const addons = AVAILABLE_ADDONS.filter((a) => selectedAddonIds.includes(a.id));
     const addonsTotal = addons.reduce((sum, a) => sum + a.price, 0);
-    const basePrice = fleetOption.price;
+    const basePrice = gradedPrice(fleetOption.price, grade);
     const deliveryFee = Math.round(source.distanceKm * DELIVERY_FEE_PER_KM);
     const taxes = Math.round((basePrice + addonsTotal + deliveryFee + SERVICE_FEE) * TAX_RATE);
     const totalAmount = basePrice + addonsTotal + deliveryFee + SERVICE_FEE + taxes;
@@ -46,8 +49,8 @@ export async function createTankerBooking(req, res, next) {
       },
       quantity: fleetOption.capacity,
       waterQuality: {
-        grade: source.waterQuality.grade,
-        label: source.waterQuality.label,
+        grade: grade.id,
+        label: grade.label,
         tds: source.waterQuality.tds,
         ph: source.waterQuality.ph,
         certification: source.waterQuality.certification,
@@ -74,8 +77,6 @@ export async function createTankerBooking(req, res, next) {
       deliverySlot,
       // Payment is collected on delivery (cash) or through the payment gateway; never assumed paid here.
       payment: { method: paymentMethod, status: 'pending' },
-      driver: DRIVER_FLEET[crypto.randomInt(DRIVER_FLEET.length)],
-      tracking: { etaMinutes: source.etaMinutes },
     });
 
     // Mirror as a service request so the Water department sees it in the officer queue.

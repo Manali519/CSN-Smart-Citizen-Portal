@@ -88,7 +88,7 @@ export async function officerLogin(req, res, next) {
 }
 
 export function officerLogout(_req, res) {
-  clearStaffSession(res);
+  clearStaffSession(res, 'officer');
   res.status(200).json({ success: true, message: 'Logged out.' });
 }
 

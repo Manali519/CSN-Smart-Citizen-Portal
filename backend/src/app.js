@@ -1,5 +1,4 @@
 import express from 'express';
-import mongoose from 'mongoose';
 import helmet from 'helmet';
 import cors from 'cors';
 import cookieParser from 'cookie-parser';
@@ -14,6 +13,7 @@ import adminRoutes from './routes/adminRoutes.js';
 import paymentRoutes from './routes/paymentRoutes.js';
 import publicRoutes from './routes/publicRoutes.js';
 import { complaintConfig } from './config/complaint.config.js';
+import { dbStatus } from './config/db.js';
 
 export function createApp() {
   const app = express();
@@ -46,11 +46,9 @@ export function createApp() {
   app.use(express.json({ limit: '20kb' }));
   app.use(cookieParser());
 
-  app.get('/api/health', (req, res) => {
-    // ip: the client address as the API sees it (behind the frontend's /api rewrite this may be Vercel's proxy)
-    // db: whether MongoDB is reachable; the reason for a failure is in the server log ("[db] ...").
-    const db = mongoose.connection.readyState === 1 ? 'connected' : 'unreachable';
-    res.json({ success: true, status: 'ok', db, time: new Date().toISOString(), ip: req.ip });
+  app.get('/api/health', (_req, res) => {
+    res.set('Cache-Control', 'no-store');
+    res.json({ success: true, status: 'ok', ...dbStatus(), time: new Date().toISOString() });
   });
 
   // Local photo storage (development only; production photos are served by Vercel Blob)

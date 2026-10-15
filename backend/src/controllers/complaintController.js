@@ -2,7 +2,8 @@ import mongoose from 'mongoose';
 import { Complaint, COMPLAINT_STATUSES, OFFICER_OPEN_STATUSES } from '../models/Complaint.js';
 import { COMPLAINT_CATEGORIES, departmentFor } from '../config/complaintCategories.js';
 import { complaintConfig as cfg } from '../config/complaint.config.js';
-import { prepareImage, validateComplaint } from '../utils/gemini.js';
+import { validateComplaint } from '../utils/gemini.js';
+import { cleanPhoto, processComplaintPhoto } from '../utils/photo.js';
 import { gpsFromExif, isValidPoint, inCity, toNum } from '../utils/location.js';
 import { generateReferenceNo } from '../utils/reference.js';
 import { saveImage, removeImage } from '../utils/imageStore.js';
@@ -56,16 +57,17 @@ export async function createComplaint(req, res, next) {
       return fail(res, 400, 'BAD_TEXT', 'Description must be 10 to 1000 characters.');
     }
     if (!file) return fail(res, 400, 'NO_IMAGE', 'A photo of the problem is required.');
-    const imageType = sniffImageType(file.buffer);
-    if (!imageType) return fail(res, 400, 'BAD_IMAGE', 'The uploaded file is not a valid JPEG, PNG or WebP image.');
+    if (!sniffImageType(file.buffer)) {
+      return fail(res, 400, 'BAD_IMAGE', 'The uploaded file is not a valid JPEG, PNG or WebP image.');
+    }
     let photo;
     try {
-      photo = await prepareImage(file.buffer);
+      photo = await processComplaintPhoto(file.buffer);
     } catch {
       return fail(res, 400, 'BAD_IMAGE', 'The uploaded file is not a valid image.');
     }
 
-    // 1. Location: photo EXIF GPS -> browser GPS / manual map pin -> ask the client to pin it
+    // 1. Location: photo EXIF GPS (read from the original upload) -> browser GPS / manual map pin -> ask to pin it
     let loc = await gpsFromExif(file.buffer);
     let source = 'exif';
     if (!isValidPoint(loc)) {
@@ -102,7 +104,7 @@ export async function createComplaint(req, res, next) {
     } else {
       // 4. AI validation (Gemini). If it is unavailable the complaint goes to the admin queue instead of being lost.
       try {
-        result = await validateComplaint({ jpeg: photo.jpeg, text: description, category });
+        result = await validateComplaint({ photo: photo.preview, text: description, category });
       } catch (err) {
         console.error('[complaints] AI validation unavailable:', err.message);
         flags.push('ml_unavailable');
@@ -113,15 +115,16 @@ export async function createComplaint(req, res, next) {
         if (!result.text_match) flags.push('text_mismatch');
         if (!result.valid && result.image_match && result.text_match) flags.push('low_confidence');
       }
-      // 5. Duplicate image detection (perceptual hash, computed locally so it runs even without the AI check)
-      if (await isDuplicateImage(photo.phash)) flags.push('duplicate_image');
     }
+
+    // 5. Duplicate photo (perceptual hash, computed locally so it runs even without the AI check)
+    if (await isDuplicateImage(photo.phash)) flags.push('duplicate_image');
 
     // 6./7. Decision: all checks passed -> routed to the department, otherwise -> admin queue
     const routed = flags.length === 0;
     const status = routed ? 'Pending Review' : 'Suspected Fake';
 
-    const image = await saveImage(file.buffer, imageType, 'complaints');
+    const image = await saveImage(photo.stored, 'image/jpeg', 'complaints');
     savedKey = image.key;
 
     const complaint = await Complaint.create({
@@ -278,7 +281,7 @@ export async function reviewComplaint(req, res, next) {
 
 /**
  * Officer marks a complaint of their department as complete.
- * Multipart: remarks (optional, max 1000 chars) and proof (optional photo of the fixed issue).
+ * Multipart: remarks (required, 10-1000 chars, shown to the citizen) and proof (required photo of the fixed issue).
  */
 export async function resolveComplaint(req, res, next) {
   let savedKey = null;
@@ -287,16 +290,22 @@ export async function resolveComplaint(req, res, next) {
     if (!mongoose.isValidObjectId(id)) return fail(res, 400, 'BAD_ID', 'Invalid complaint id.');
 
     const remarks = String(req.body.remarks || '').trim();
-    if (remarks.length > 1000) return fail(res, 400, 'BAD_TEXT', 'Remarks must be 1000 characters or fewer.');
-
-    let proofType = null;
-    if (req.file) {
-      proofType = sniffImageType(req.file.buffer);
-      if (!proofType) return fail(res, 400, 'BAD_IMAGE', 'The proof file is not a valid JPEG, PNG or WebP image.');
+    if (remarks.length < 10 || remarks.length > 1000) {
+      return fail(res, 400, 'BAD_TEXT', 'Describe the resolution in 10 to 1000 characters.');
+    }
+    if (!req.file) return fail(res, 400, 'NO_IMAGE', 'A photo of the resolved issue is required.');
+    if (!sniffImageType(req.file.buffer)) {
+      return fail(res, 400, 'BAD_IMAGE', 'The proof file is not a valid JPEG, PNG or WebP image.');
+    }
+    let proofPhoto;
+    try {
+      proofPhoto = await cleanPhoto(req.file.buffer);
+    } catch {
+      return fail(res, 400, 'BAD_IMAGE', 'The proof file is not a valid image.');
     }
 
-    const proof = req.file ? await saveImage(req.file.buffer, proofType, 'complaint-proofs') : null;
-    savedKey = proof?.key ?? null;
+    const proof = await saveImage(proofPhoto, 'image/jpeg', 'complaint-proofs');
+    savedKey = proof.key;
 
     // Conditional update: a complaint is resolved once, and only by its own department.
     const complaint = await Complaint.findOneAndUpdate(
@@ -305,15 +314,15 @@ export async function resolveComplaint(req, res, next) {
         $set: {
           status: 'Resolved',
           'resolution.resolvedAt': new Date(),
-          ...(remarks && { 'resolution.solutionGiven': remarks }),
+          'resolution.solutionGiven': remarks,
         },
         $push: {
           statusHistory: {
             status: 'Resolved',
             changedByModel: 'Officer',
-            remarks: `Marked complete by officer ${req.staff.id}${remarks ? `: ${remarks}` : ''}`,
+            remarks: `Marked complete by officer ${req.staff.id}: ${remarks}`,
           },
-          ...(proof && { 'resolution.afterPhotos': proof.url }),
+          'resolution.afterPhotos': proof.url,
         },
       },
       { new: true }
@@ -331,7 +340,7 @@ export async function resolveComplaint(req, res, next) {
   }
 }
 
-/** Citizen rates the resolution of their own resolved complaint. */
+/** Citizen rates the resolution of their own resolved complaint, which closes the complaint. */
 export async function submitComplaintFeedback(req, res, next) {
   try {
     const { id } = req.params;
@@ -343,9 +352,18 @@ export async function submitComplaintFeedback(req, res, next) {
       { _id: id, user: req.user._id, status: 'Resolved', 'userFeedback.rating': { $exists: false } },
       {
         $set: {
+          status: 'Closed',
           'userFeedback.rating': Number(rating),
           'userFeedback.comment': comment,
           'userFeedback.respondedAt': new Date(),
+        },
+        $push: {
+          statusHistory: {
+            status: 'Closed',
+            changedBy: req.user._id,
+            changedByModel: 'User',
+            remarks: `Citizen rated the resolution ${Number(rating)}/5`,
+          },
         },
       },
       { new: true }
@@ -354,7 +372,11 @@ export async function submitComplaintFeedback(req, res, next) {
       return fail(res, 409, 'CANNOT_RATE', 'Only your resolved complaints that are not rated yet can be rated.');
     }
 
-    return res.status(200).json({ success: true, message: 'Thanks for the feedback!' });
+    return res.status(200).json({
+      success: true,
+      message: 'Thanks for the feedback! Your complaint is now closed.',
+      complaint: { _id: complaint._id, status: complaint.status, userFeedback: complaint.userFeedback },
+    });
   } catch (err) {
     next(err);
   }

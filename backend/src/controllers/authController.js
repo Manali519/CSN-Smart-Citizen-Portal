@@ -284,10 +284,8 @@ export async function completeProfile(req, res, next) {
 
 function setSessionCookie(res, user) {
   const token = signSessionToken(user);
-  res.cookie('session', token, {
-    ...env.cookie,
-    maxAge: 7 * 24 * 60 * 60 * 1000,
-  });
+  // No maxAge: the cookie ends with the browser session (the token itself still expires per JWT_EXPIRES_IN).
+  res.cookie('session', token, env.cookie);
 }
 
 function toPublicUser(user) {

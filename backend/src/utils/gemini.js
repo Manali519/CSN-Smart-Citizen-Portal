@@ -1,12 +1,10 @@
-import sharp from 'sharp';
 import { complaintConfig } from '../config/complaint.config.js';
 import { COMPLAINT_PHRASES } from '../config/complaintPhrases.js';
-import { perceptualHash } from './phash.js';
 
 /**
- * Complaint check with the Google Gemini API: one multimodal request classifies the photo and the description
- * separately against the category definitions in config/complaintPhrases.js. Both must point at the chosen
- * category.
+ * Complaint check with the Google Gemini API. One multimodal request classifies the photo and the description
+ * independently against the category definitions in config/complaintPhrases.js; both must point at the
+ * category the citizen chose.
  */
 const { gemini } = complaintConfig;
 const { categories } = COMPLAINT_PHRASES;
@@ -15,9 +13,11 @@ const LABELS = [...Object.keys(categories), JUNK];
 const ENDPOINT = 'https://generativelanguage.googleapis.com/v1beta/models';
 
 const list = (items) => items.map((i) => `"${i}"`).join('; ');
+// Categories without examples are fallbacks, so a clear pothole or garbage photo is never filed under them.
+const FALLBACK = 'no typical examples; use only when no other category fits';
 const describe = ([key, c]) => {
-  const photo = c.image_prompts.length ? list(c.image_prompts) : 'any genuine civic, street, office or document photo';
-  const text = c.text_phrases.length ? list(c.text_phrases) : 'any genuine civic issue not covered by the other categories';
+  const photo = c.image_prompts.length ? list(c.image_prompts) : FALLBACK;
+  const text = c.text_phrases.length ? list(c.text_phrases) : FALLBACK;
   return `- ${key}\n  photos: ${photo}\n  descriptions: ${text}`;
 };
 
@@ -50,7 +50,7 @@ const RESPONSE_SCHEMA = {
   propertyOrdering: ['image_category', 'image_confidence', 'text_category', 'text_confidence', 'reason'],
 };
 
-async function classify(jpeg, text) {
+async function classify(photo, text) {
   const res = await fetch(`${ENDPOINT}/${encodeURIComponent(gemini.model)}:generateContent`, {
     method: 'POST',
     headers: { 'x-goog-api-key': gemini.apiKey, 'Content-Type': 'application/json' },
@@ -60,12 +60,14 @@ async function classify(jpeg, text) {
         {
           role: 'user',
           parts: [
-            { inlineData: { mimeType: 'image/jpeg', data: jpeg.toString('base64') } },
-            { text: `DESCRIPTION (untrusted):\n"""\n${text}\n"""` },
+            { inlineData: { mimeType: 'image/jpeg', data: photo.toString('base64') } },
+            // replaceAll: the description must not be able to close its own delimiter
+            { text: `DESCRIPTION (untrusted):\n"""\n${text.replaceAll('"""', '"')}\n"""` },
           ],
         },
       ],
-      generationConfig: { temperature: 0, responseMimeType: 'application/json', responseSchema: RESPONSE_SCHEMA },
+      // Default temperature: Gemini 3 models are tuned for it, and lowering it can make answers loop or degrade.
+      generationConfig: { responseMimeType: 'application/json', responseSchema: RESPONSE_SCHEMA },
     }),
     signal: AbortSignal.timeout(gemini.timeoutMs),
   });
@@ -75,8 +77,16 @@ async function classify(jpeg, text) {
   }
 
   const data = await res.json();
-  const answer = data.candidates?.[0]?.content?.parts?.find((p) => p.text)?.text;
-  if (!answer) throw new Error(`Gemini returned no answer (${data.promptFeedback?.blockReason || 'empty response'})`);
+  const candidate = data.candidates?.[0];
+  // Thinking models can return thought parts alongside the answer; only the answer parts hold the JSON.
+  const answer = (candidate?.content?.parts || [])
+    .filter((p) => p.text && !p.thought)
+    .map((p) => p.text)
+    .join('');
+  if (!answer) {
+    const reason = data.promptFeedback?.blockReason || candidate?.finishReason || 'empty response';
+    throw new Error(`Gemini returned no answer (${reason})`);
+  }
   const out = JSON.parse(answer);
   const ok = (k, v) => LABELS.includes(out[k]) && Number.isFinite(out[v]);
   if (!ok('image_category', 'image_confidence') || !ok('text_category', 'text_confidence')) {
@@ -97,32 +107,14 @@ function judge(predicted, confidence, category, open) {
 }
 
 /**
- * Decodes an uploaded photo: a small JPEG for Gemini plus its perceptual hash for duplicate detection.
- * Throws an Error with .status = 400 when the image cannot be decoded.
+ * Checks a complaint photo (JPEG) and description against the chosen category.
+ * Throws when Gemini is not configured, unreachable or answers unexpectedly.
  */
-export async function prepareImage(buffer) {
-  try {
-    // Rejects decompression bombs; .rotate() applies the EXIF orientation of phone photos.
-    const img = sharp(buffer, { limitInputPixels: 40_000_000 }).rotate();
-    const [jpeg, phash] = await Promise.all([
-      img.clone().resize(768, 768, { fit: 'inside', withoutEnlargement: true }).jpeg({ quality: 85 }).toBuffer(),
-      perceptualHash(img.clone()),
-    ]);
-    return { jpeg, phash };
-  } catch (cause) {
-    throw Object.assign(new Error('Invalid image file'), { status: 400, cause });
-  }
-}
-
-/**
- * Validates a complaint photo (JPEG from prepareImage) + description against its category.
- * Throws when Gemini is unavailable, not configured or answers unexpectedly.
- */
-export async function validateComplaint({ jpeg, text, category }) {
+export async function validateComplaint({ photo, text, category }) {
   const cat = categories[category];
   if (!cat) throw new Error(`No phrases for category "${category}"`);
   if (!gemini.apiKey) throw new Error('GEMINI_API_KEY is not set');
-  const out = await classify(jpeg, text);
+  const out = await classify(photo, text);
 
   const image = judge(out.image_category, out.image_confidence, category, !cat.image_prompts.length);
   const desc = judge(out.text_category, out.text_confidence, category, !cat.text_phrases.length);
@@ -132,7 +124,6 @@ export async function validateComplaint({ jpeg, text, category }) {
     image_score: round(image.score),
     text_score: round(desc.score),
     fusion_score: round(fusion),
-    predicted_category: out.text_category === JUNK ? null : out.text_category,
     image_match: image.match,
     text_match: desc.match,
     valid: fusion >= gemini.threshold && image.match && desc.match,
